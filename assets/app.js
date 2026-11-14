@@ -327,7 +327,7 @@
       if (document.getElementById('wxFallbackBar')) return;
       var bar = document.createElement('a');
       bar.id = 'wxFallbackBar';
-      bar.href = 'wechat.html?preview=1';
+      bar.href = 'wechat.html';
       bar.textContent = '检测到微信内置浏览器：点这里查看「在浏览器中打开」图文指引 →';
       bar.style.cssText = 'display:block;position:sticky;top:0;z-index:9998;padding:12px 14px;' +
         'background:#B24A3B;color:#fff;font-size:14px;font-weight:600;text-align:center;text-decoration:none';

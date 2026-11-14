@@ -10,9 +10,13 @@
 <link rel="icon" href="assets/favicon.png" type="image/png">
 
 <!-- 这个页面只负责「微信引导」。
-     只有「从微信点『在浏览器中打开』过来」时才自动跳回下载页：
-     即 URL 带 from=wx、且当前 UA 不是微信。
-     其余情况（含普通浏览器直接打开、预览面板丢参数）一律停留显示本引导页。 -->
+     ★ 跳转规则只看 UA，完全不依赖任何 URL 参数：
+       · 微信 / 企业微信内置浏览器 → 停留显示本引导页；
+       · 其它浏览器（包括从微信「在浏览器中打开」过来的）→ 首帧直接回 index.html。
+       微信换浏览器时可能丢掉或改写 from / preview / wx 参数，靠参数判断就会卡在引导页。
+     ★ 想随时查看引导图，打开独立预览页 guide-preview.html：
+       纯静态、不含跳转、不吃参数，由 node build.js 从本页同步生成。 -->
+<!-- GUIDE-REDIRECT:START （生成 guide-preview.html 时整段删除） -->
 <script>
 (function () {
   function isWechat() {
@@ -23,24 +27,28 @@
     return false;
   }
   window.__suyuanIsWechat = isWechat;
-  try {
-    var q = location.search;
-    var preview = /[?&](?:wx=1|preview=1)(?:&|$)/.test(q);
-    var fromWx = /[?&]from=wx(?:&|$)/.test(q);
-    if (!preview && fromWx && !isWechat()) location.replace('index.html');
-  } catch (e) {}
+  if (isWechat()) return;
+
+  // 外部浏览器一律回下载页：不读参数、不写跳过标记、不留预览例外。
+  function backToDownload() {
+    try { location.replace('index.html'); }
+    catch (e) { location.href = 'index.html'; }
+  }
+  backToDownload();                                            // 首帧立即跳，不闪引导页
+  document.addEventListener('DOMContentLoaded', backToDownload); // 兜底：head 脚本万一被拦
 })();
 </script>
+<!-- GUIDE-REDIRECT:END -->
 <link rel="stylesheet" href="assets/wechat.css">
 </head>
 <body>
 
 <div class="wx-page">
 
-  <!-- 右上角指示：指向微信真实的 ··· 按钮 -->
+  <!-- 卡片外的箭头只指向微信「真实」的右上角 ···。
+       这里不画虚拟三点：真实环境本身就有胶囊三点，两个并列会让用户误点假的。 -->
   <div class="wx-pointer" aria-hidden="true">
     <svg class="wx-pointer-arrow" viewBox="0 0 120 110"><path d="M18 100C24 58 52 26 100 20"/><path d="M84 12l18 6-8 18"/></svg>
-    <!-- <span class="wx-pointer-capsule"><i></i><i></i><i></i></span> -->
     <span class="wx-pointer-text">① 点右上角 ···</span>
   </div>
 
@@ -143,7 +151,7 @@
       <li><span>2</span><div><b>在底部面板点「<em data-wx-ios="在 Safari 中打开">在浏览器中打开</em>」</b><p>第一行靠右、蓝绿色漩涡图标那一格；这一行可以左右滑动，不同手机可能写成「在外部浏览器打开」。</p></div></li>
     </ol>
 
-    <p class="wx-after">换到系统浏览器后，本页会自动回到下载页，直接点绿色「下载安装包」按钮即可。</p>
+    <p class="wx-after">换到系统浏览器后，页面会自动回到下载页（不会停在引导页），直接点绿色「下载安装包」按钮即可。</p>
 
     <div class="wx-actions">
       <button type="button" class="wx-btn wx-btn-primary" id="wxCopy">复制下载链接 · 去浏览器粘贴</button>
@@ -158,7 +166,7 @@
 
     <p class="wx-ios-tip" id="wxIosTip" hidden>检测到 iPhone / iPad：溯源目前只提供 Android 安装包，换到浏览器也无法安装。建议把本页转发到安卓手机再下载。</p>
     <button type="button" class="wx-skip" id="wxSkip">仍要继续浏览（不下载）</button>
-    <p class="wx-foot">本页是独立的微信引导页 · 改引导只需动 <code>wechat.html</code>、<code>assets/wechat.css</code>、<code>assets/wechat.js</code></p>
+    <p class="wx-foot">本页是独立的微信引导页 · 改引导只需动 <code>wechat.html</code>、<code>assets/wechat.css</code>、<code>assets/wechat.js</code>；改完跑一次 <code>node build.js</code> 同步刷新 <code>guide-preview.html</code></p>
   </main>
 
   <div class="wx-toast" id="wxToast" role="status" aria-live="polite"></div>

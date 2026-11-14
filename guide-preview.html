@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>引导图静态预览 · 溯源</title>
+<meta name="description" content="微信内置浏览器无法下载 APK。照着页面上的一张完整手机示意图，从右上角 ··· 换到系统浏览器再下载。">
+<meta name="theme-color" content="#F1F6F5">
+<link rel="icon" href="assets/favicon.ico" sizes="any">
+<link rel="icon" href="assets/favicon.png" type="image/png">
+
+<!-- 独立静态预览页：由 node build.js 从 wechat.html 生成；改引导请改源文件后重跑本脚本 -->
+<!-- 独立静态预览页：线上跳转脚本已移除，本页永不跳转、不依赖 URL 参数 -->
+
+<link rel="stylesheet" href="assets/wechat.css">
+
+<meta name="robots" content="noindex, nofollow">
+<style>
+  .gp-bar { display: flex; align-items: center; flex-wrap: wrap; gap: 10px;
+    width: min(100%, 540px); margin: 44px 0 18px; padding: 11px 14px;
+    border: 1px solid #C6DBD6; border-radius: 12px; background: #E4F0ED;
+    font-size: 12px; line-height: 1.65; color: #2A5A54; text-align: left; }
+  .gp-bar b { flex: none; font-size: 13px; color: #1E3330; }
+  .gp-bar span { flex: 1 1 240px; min-width: 0; }
+  .gp-bar a { flex: none; color: #1E6B5A; font-weight: 600; text-decoration: underline; text-underline-offset: 3px; }
+  .gp-bar code { font-size: 11px; }
+  .wx-preview-bar { display: none !important; } /* 由上面的横幅代替 */
+</style>
+</head>
+<body>
+
+<div class="wx-page">
+
+      <div class="gp-bar">
+        <b>引导图 · 静态预览</b>
+        <span>本页不含任何跳转逻辑、不依赖 URL 参数：本地双击、预览面板、GitHub Pages 都能直接看到完整引导图。卡片外的朱红箭头指向微信<b>真实</b>的右上角「···」，预览页不重复画虚拟三点。由 <code>node build.js</code> 从 <code>wechat.html</code> 同步生成，改完引导记得重跑一次。</span>
+        <a href="index.html?nowx=1">返回下载页 →</a>
+      </div>
+
+
+  <!-- 卡片外的箭头只指向微信「真实」的右上角 ···。
+       这里不画虚拟三点：真实环境本身就有胶囊三点，两个并列会让用户误点假的。 -->
+  <div class="wx-pointer" aria-hidden="true">
+    <svg class="wx-pointer-arrow" viewBox="0 0 120 110"><path d="M18 100C24 58 52 26 100 20"/><path d="M84 12l18 6-8 18"/></svg>
+    <span class="wx-pointer-text">① 点右上角 ···</span>
+  </div>
+
+  <main class="wx-panel">
+    <div class="wx-preview-bar" id="wxPreviewBar" hidden>
+      <span>当前是浏览器预览 · 线上在微信里打开会自动显示本页</span>
+      <a href="index.html">去下载页 →</a>
+    </div>
+    <div class="wx-brand"><img src="assets/logo.png" alt="" width="42" height="42"><span>溯源</span></div>
+    <h1 class="wx-title">请在浏览器中打开</h1>
+    <p class="wx-lead">微信内置浏览器无法下载 APK 安装包。<br>下面这一张图看完，照着 ① ② 做就能换到系统浏览器。</p>
+
+    <!-- ================= 一张完整手机长方形指示图 =================
+         按真实微信分享面板 1:1 还原：6 个联系人 + 两行各 6 个图标。
+         ① 指右上角 ···，② 指第一行靠右「在浏览器中打开」。 -->
+    <div class="wx-figure">
+      <div class="wx-phone" aria-hidden="true">
+        <span class="wx-notch"></span>
+
+        <div class="wx-status">
+          <span>22:52</span>
+          <span class="wx-status-right">
+            <svg class="ico-status" viewBox="0 0 20 16"><path d="M3 6v4M6 4v8M9 2v12"/><path d="M13 3l6 10"/></svg>
+            <svg class="ico-status" viewBox="0 0 20 16"><path d="M2 6a13 13 0 0 1 16 0M5 9a9 9 0 0 1 10 0M8 12a5 5 0 0 1 4 0"/><circle cx="10" cy="14" r="1" fill="currentColor" stroke="none"/></svg>
+            <b>5G</b><b>5G</b>
+            <span class="wx-battery"><i></i>78%</span>
+          </span>
+        </div>
+
+        <div class="wx-screen">
+          <div class="wx-bar">
+            <span class="wx-close">×</span>
+            <span class="wx-bar-center">
+              <b>溯源 · 子午流注学习台 | 官方下载</b>
+              <em class="js-host">tinanu.github.io</em>
+            </span>
+            <span class="wx-capsule wx-capsule-target"><i></i><i></i><i></i></span>
+            <span class="wx-mark-1"><b>1</b> 点右上角 ···
+              <svg viewBox="0 0 30 24"><path d="M3 21C6 10 15 3 27 3"/><path d="M21 1l7 2-2 7"/></svg>
+            </span>
+          </div>
+
+          <div class="wx-behind">
+            <div class="wx-behind-head">
+              <span class="wx-behind-brand"><img src="assets/logo.png" alt="" width="22" height="22">溯源</span>
+              <span class="wx-behind-right"><em>下载</em><span class="wx-behind-menu"><i></i><i></i><i></i></span></span>
+            </div>
+            <div class="wx-behind-chip">◆ 循经按时 · 溯源而学 <i>v1.0.2</i></div>
+            <div class="wx-behind-title">溯<b>源</b></div>
+          </div>
+
+          <div class="wx-sheet">
+            <div class="wx-sheet-owner">此网页由 <span class="js-host">tinanu.github.io</span> 提供</div>
+
+            <div class="wx-sheet-contacts">
+              <b>转发给</b>
+              <div class="wx-contacts">
+                <span class="wx-contact"><i class="av-1">小</i><em>林小满</em></span>
+                <span class="wx-contact"><i class="av-2">夏</i><em>沈知夏</em></span>
+                <span class="wx-contact"><i class="av-3">禾</i><em>许清禾</em></span>
+                <span class="wx-contact"><i class="av-4">舒</i><em>陆云舒</em></span>
+                <span class="wx-contact"><i class="av-5">枝</i><em>苏南枝</em></span>
+                <span class="wx-contact"><i class="av-6">白</i><em>江月白</em></span>
+              </div>
+            </div>
+
+            <div class="wx-sheet-row">
+              <div class="wx-sheet-item"><i class="wx-ico"><svg viewBox="0 0 24 24" class="ico-forward"><path d="M5 17c1-7 5-11 12-11V3l6 6-6 6v-3c-6 0-9 3-10 8z"/></svg></i><span>转发给<br>朋友</span></div>
+              <div class="wx-sheet-item"><i class="wx-ico"><span class="ico-wheel"></span></i><span>分享到<br>朋友圈</span></div>
+              <div class="wx-sheet-item"><i class="wx-ico"><svg viewBox="0 0 24 24" class="ico-cube"><path style="fill:#3B9EE8" d="M12 3l8 4-8 4-8-4z"/><path style="fill:#F5C542" d="M4 7l8 4v10l-8-4z"/><path style="fill:#E8514B" d="M20 7l-8 4v10l8-4z"/></svg></i><span>收藏</span></div>
+              <div class="wx-sheet-item"><i class="wx-ico"><svg viewBox="0 0 24 24" class="ico-star"><path d="M12 2.5v5M12 16.5v5M4 6l3.5 3.5M16.5 14.5 20 18M20 6l-3.5 3.5M7.5 14.5 4 18"/></svg></i><span>搜一搜</span></div>
+              <div class="wx-sheet-item hit">
+                <span class="wx-hit-flag"><b>2</b> 点这一项<svg viewBox="0 0 12 12"><path d="M6 1v8m0 0-3-3m3 3 3-3"/></svg></span>
+                <i class="wx-ico"><svg viewBox="0 0 24 24" class="ico-edge"><circle cx="12" cy="12" r="9" style="fill:#0B57A4"/><path d="M3 13c3-9 13-10 18-5-5-1-10 1-12 5-2 4-1 7 1 8-6 0-9-3-7-8z" style="fill:#1D9E75"/><path d="M4 16c2 5 10 6 15 1-4 3-10 3-12 1" style="fill:#38B7E8"/></svg></i>
+                <span data-wx-ios="在 Safari 中打开">在浏览器中<br>打开</span>
+              </div>
+              <div class="wx-sheet-item"><i class="wx-ico wx-ico-more"><svg viewBox="0 0 24 24" class="ico-more"><circle cx="7" cy="12" r="1.7"/><circle cx="12" cy="12" r="1.7"/><circle cx="17" cy="12" r="1.7"/></svg></i><span>用其他<br>应用打开</span></div>
+            </div>
+
+            <div class="wx-sheet-row wx-sheet-row-2">
+              <div class="wx-sheet-item"><i class="wx-ico"><svg viewBox="0 0 24 24" class="ico-dots"><circle cx="8" cy="12" r="1.8"/><circle cx="16" cy="12" r="1.8"/></svg></i><span>浮窗</span></div>
+              <div class="wx-sheet-item"><i class="wx-ico"><svg viewBox="0 0 24 24" class="ico-line"><path d="M4 14v6h16v-6M12 3v11m0 0 4-4m-4 4-4-4"/></svg></i><span>保存为<br>图片</span></div>
+              <div class="wx-sheet-item"><i class="wx-ico"><svg viewBox="0 0 24 24" class="ico-line"><path d="M12 3 3 20h18z"/><path d="M12 9v5M12 17h.01"/></svg></i><span>投诉</span></div>
+              <div class="wx-sheet-item"><i class="wx-ico"><svg viewBox="0 0 24 24" class="ico-line"><path d="M13 8.5a4.6 4.6 0 0 0-6.5 0L5 10a4.6 4.6 0 0 0 6.5 6.5l1.3-1.3"/><path d="M11 15.5a4.6 4.6 0 0 0 6.5 0L19 14a4.6 4.6 0 0 0-6.5-6.5L11.2 8.8"/><path d="M8.4 11.6h7.2"/></svg></i><span>复制链接</span></div>
+              <div class="wx-sheet-item"><i class="wx-ico"><svg viewBox="0 0 24 24" class="ico-line"><path d="M4.8 8.2a5.6 5.6 0 0 1 9.5-2.1l1.2 1.2M19.2 15.8a5.6 5.6 0 0 1-9.5 2.1l-1.2-1.2"/><path d="M19.5 3.8v3.5H16M4.5 20.2v-3.5H8"/></svg></i><span>刷新</span></div>
+              <div class="wx-sheet-item"><i class="wx-ico"><svg viewBox="0 0 24 24" class="ico-line"><path d="M4 3h12v18H4zM7 7h6M7 10h6"/><circle cx="15" cy="15" r="3.6"/><path d="M18 18l3 3"/></svg></i><span>查找页<br>面内容</span></div>
+            </div>
+
+            <div class="wx-sheet-cancel">取消</div>
+          </div>
+        </div>
+
+        <span class="wx-home"></span>
+      </div>
+      <p class="wx-figure-caption">一张图看完 · ① 右上角「···」→ ② 第一行靠右「在浏览器中打开」</p>
+    </div>
+
+    <ol class="wx-howto">
+      <li><span>1</span><div><b>点右上角「···」</b><p>菜单按钮在屏幕最右上角的胶囊里，看不到顶栏就轻轻往下滑一下。点完它，面板会从底部弹出。</p></div></li>
+      <li><span>2</span><div><b>在底部面板点「<em data-wx-ios="在 Safari 中打开">在浏览器中打开</em>」</b><p>第一行靠右、蓝绿色漩涡图标那一格；这一行可以左右滑动，不同手机可能写成「在外部浏览器打开」。</p></div></li>
+    </ol>
+
+    <p class="wx-after">换到系统浏览器后，页面会自动回到下载页（不会停在引导页），直接点绿色「下载安装包」按钮即可。</p>
+
+    <div class="wx-actions">
+      <button type="button" class="wx-btn wx-btn-primary" id="wxCopy">复制下载链接 · 去浏览器粘贴</button>
+      <a class="wx-btn wx-btn-plain" href="index.html?nowx=1">已在浏览器中 · 打开下载页</a>
+    </div>
+
+    <details class="wx-more">
+      <summary>菜单里没有「在浏览器打开」？</summary>
+      <p>点右上角「···」后，在弹出的底部面板<b>第二行</b>点「复制链接」，再打开手机自带浏览器，长按地址栏粘贴访问；也可以把本页发到「文件传输助手」，在电脑浏览器打开后下载，再传到手机。</p>
+      <input class="wx-url" id="wxUrl" type="text" readonly aria-label="下载页链接，可长按选中复制">
+    </details>
+
+    <p class="wx-ios-tip" id="wxIosTip" hidden>检测到 iPhone / iPad：溯源目前只提供 Android 安装包，换到浏览器也无法安装。建议把本页转发到安卓手机再下载。</p>
+    <button type="button" class="wx-skip" id="wxSkip">仍要继续浏览（不下载）</button>
+    <p class="wx-foot">本页是独立的微信引导页 · 改引导只需动 <code>wechat.html</code>、<code>assets/wechat.css</code>、<code>assets/wechat.js</code>；改完跑一次 <code>node build.js</code> 同步刷新 <code>guide-preview.html</code></p>
+  </main>
+
+  <div class="wx-toast" id="wxToast" role="status" aria-live="polite"></div>
+</div>
+
+<script src="assets/wechat.js"></script>
+</body>
+</html>

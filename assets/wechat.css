@@ -43,7 +43,8 @@ svg { width: 1em; height: 1em; fill: none; stroke: currentColor; stroke-width: 1
   background-size: 46px 46px;
 }
 
-/* 右上角指示：箭头 + 金圈，对应微信真实的 ··· 按钮 */
+/* 卡片外右上角指示：只留箭头，指向微信「真实」的 ··· 按钮。
+   不再画虚拟三点 / 金圈，避免与微信自带胶囊并列造成误点。 */
 .wx-pointer {
   position: absolute; top: max(10px, env(safe-area-inset-top)); right: 14px;
   width: 156px; height: 132px; pointer-events: none; z-index: 2;
@@ -59,18 +60,13 @@ svg { width: 1em; height: 1em; fill: none; stroke: currentColor; stroke-width: 1
   padding: 2px 7px; border-radius: 999px; background: var(--bg);
   font-size: 13px; font-weight: 600; color: var(--seal);
 }
-.wx-capsule, .wx-pointer-capsule {
+/* 手机示意图内部的三点胶囊（属于教程截图本身，保留） */
+.wx-capsule {
   display: inline-flex; align-items: center; gap: 3px; flex: none;
   height: 22px; padding: 0 9px; border: 1px solid var(--line);
   border-radius: 999px; background: var(--card); position: relative;
 }
-.wx-capsule i, .wx-pointer-capsule i { width: 4px; height: 4px; border-radius: 50%; background: #333333; }
-.wx-pointer-capsule { position: absolute; top: 4px; right: 8px; }
-.wx-pointer-capsule::after {
-  content: ""; position: absolute; inset: -8px -10px;
-  border: 1.5px dashed var(--gold); border-radius: 999px;
-  animation: wxPulse 1.9s ease-in-out infinite;
-}
+.wx-capsule i { width: 4px; height: 4px; border-radius: 50%; background: #333333; }
 
 .wx-panel {
   width: min(100%, 540px); position: relative; z-index: 1;

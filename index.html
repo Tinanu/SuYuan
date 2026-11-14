@@ -23,7 +23,8 @@
 
 /* 微信内置浏览器：首帧直接跳到独立引导页 wechat.html，避免先闪一下下载页。
    三重保险：head 本段 → <body> 开头 → app.js 末尾，任一生效即可（防缓存 / 防脚本被拦）。
-   ?wx=1 强制预览引导页；?nowx=1 强制留在下载页（点过「仍要继续浏览」也是这个参数）。
+   ?nowx=1 强制留在下载页（点过「仍要继续浏览」也是这个参数）。
+   引导页的回跳只看 UA、不看参数；想看引导图请打开独立静态预览页 guide-preview.html。
    注意：不再读取 sessionStorage 跳过标记，避免微信里点过一次就再也不跳。 */
 function suyuanIsWechat() {
   var ua = navigator.userAgent || '';
@@ -35,12 +36,11 @@ function suyuanIsWechat() {
 window.__suyuanIsWechat = suyuanIsWechat;
 window.__suyuanGoWechat = function () {
   try {
-    var q = location.search;
-    var force = /[?&]wx=1(?:&|$)/.test(q);
-    if (/[?&]nowx=1(?:&|$)/.test(q)) return false;
-    if (!force && !suyuanIsWechat()) return false;
+    if (/[?&]nowx=1(?:&|$)/.test(location.search)) return false;
     if (/wechat\.html(?:\?|$)/.test(location.pathname)) return false;
-    location.replace('wechat.html?' + (force ? 'preview=1' : 'from=wx'));
+    if (!suyuanIsWechat()) return false;
+    // 无参数跳转：外部浏览器打开 wechat.html 时会按 UA 直接回本页，不会卡在引导页。
+    location.replace('wechat.html');
     return true;
   } catch (e) { return false; }
 };
@@ -300,7 +300,7 @@ window.__suyuanGoWechat();
             <span id="dlMainText">下载安装包 · v1.0.2</span>
           </a>
 
-          <p class="wx-entry">在微信里打开没跳转？<a href="wechat.html?preview=1">看「请在浏览器中打开」图文指引</a></p>
+          <p class="wx-entry">在微信里打开没跳转？<a href="wechat.html">看「请在浏览器中打开」图文指引</a></p>
 
           <div class="sha-row" id="shaRow">
             <span>SHA-256</span>
@@ -340,7 +340,8 @@ window.__suyuanGoWechat();
             <li>GitHub 仓库 → Settings → Pages → Build and deployment 选 <b>Deploy from a branch</b>，分支 <b>main</b>、目录 <b>/ (root)</b>，保存后等一两分钟即可访问。</li>
           </ol>
           <p>即使忘记跑 <code>build.js</code>，页面也会探测 <code>appAPK/溯源.apk</code>，并把目录里的其它文件作为备用下载。单文件超过 100 MB 时，GitHub 仓库会拒绝提交，建议改放 GitHub Releases。</p>
-          <p>微信引导已拆成独立页面 <code>wechat.html</code>（配套 <code>assets/wechat.css</code>、<code>assets/wechat.js</code>），一张带 ① ② 箭头指引的完整手机示意图一次呈现，改引导不用动本页。微信 / 企业微信打开 <code>index.html</code> 会首帧跳到 <code>wechat.html?from=wx</code>；用户在系统浏览器打开这个带 <code>from=wx</code> 的引导页时会自动回到下载页。普通浏览器直接打开 <code>wechat.html</code> 或 <code>wechat.html?wx=1</code> 都会<b>停留显示引导页</b>，方便随时预览；<code>?nowx=1</code> 强制留在下载页。线上若微信没跳，可打开 <code>diag.html</code> 自查 UA 与版本。</p>
+          <p>微信引导已拆成独立页面 <code>wechat.html</code>（配套 <code>assets/wechat.css</code>、<code>assets/wechat.js</code>），一张带 ① ② 箭头指引的完整手机示意图一次呈现，改引导不用动本页。微信 / 企业微信打开 <code>index.html</code> 会首帧跳到 <code>wechat.html</code>；<b>引导页回跳只看 UA、完全不看 URL 参数</b>，所以从微信点「在浏览器中打开」到系统浏览器时，无论参数被丢掉还是改写，都会直接回到下载页，不会卡在引导页。<code>?nowx=1</code> 强制留在下载页。</p>
+          <p>想随时查看引导图，打开独立静态预览页 <a href="guide-preview.html"><code>guide-preview.html</code></a>：不含任何跳转逻辑、不依赖 URL 参数，本地双击、预览面板、线上都能直接看到完整引导图。它由 <code>node build.js</code> 从 <code>wechat.html</code> 同步生成，<b>改完引导记得重跑一次</b>。线上若微信没跳，可打开 <code>diag.html</code> 自查 UA 与版本。</p>
           <p>想显示右上角「仓库」按钮，在 <code>build.js</code> 的 <code>SITE.github</code> 填入仓库地址后重新生成清单。</p>
         </div>
       </details>
@@ -377,7 +378,7 @@ window.__suyuanGoWechat();
       </div>
       <div class="faq-list reveal">
         <details open><summary>需要联网吗？<i></i></summary><p>不需要。题库、解析、口诀与二十八脉动态页都内嵌在应用里，飞行模式也能练；只有「检查更新」会访问网络。</p></details>
-        <details><summary>在微信里点「下载」没反应？<i></i></summary><p>微信内置浏览器会拦截 APK 下载，页面会自动跳到独立的「请在浏览器中打开」引导页（一张带 ① ② 指引的完整手机示意图看完）。点屏幕右上角「···」，在底部面板第一行找到「在浏览器中打开」，系统浏览器会自动回到下载页再下载；找不到该选项就点第二行「复制链接」，粘贴到浏览器地址栏访问。若微信里压根没跳转，点下载按钮下方的「看图文指引」手动进入，或打开 <code>diag.html</code> 查看是版本缓存还是 UA 识别问题。</p></details>
+        <details><summary>在微信里点「下载」没反应？<i></i></summary><p>微信内置浏览器会拦截 APK 下载，页面会自动跳到独立的「请在浏览器中打开」引导页（一张带 ① ② 指引的完整手机示意图看完）。点屏幕右上角「···」，在底部面板第一行找到「在浏览器中打开」，系统浏览器会自动回到下载页再下载（这一步不依赖链接参数，不会停在引导页）；找不到该选项就点第二行「复制链接」，粘贴到浏览器地址栏访问；万一仍停在引导页，点底部「已在浏览器中 · 打开下载页」。若微信里压根没跳转，点下载按钮下方的「看图文指引」手动进入，或打开 <code>diag.html</code> 查看是版本缓存还是 UA 识别问题。</p></details>
         <details><summary>iPhone / iOS 能用吗？<i></i></summary><p>目前只提供 Android 安装包（APK），iPhone / iPad 暂不支持。</p></details>
         <details><summary>安装时被系统拦住怎么办？<i></i></summary><p>在系统提示中允许「安装未知来源应用」；部分机型还需临时关闭「纯净模式」或「安装监控」，装完可重新开启。</p></details>
         <details><summary>提示「应用未经验证」安全吗？<i></i></summary><p>当前是开发调试版（debug 签名），系统因此会给出提示。文件由本站直接提供，下载后可用上方 SHA-256 核对完整性；确认一致再安装，不要从第三方渠道获取同名安装包。</p></details>

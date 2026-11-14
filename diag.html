@@ -35,7 +35,7 @@
   <p class="lead">在微信里打开本页，把下面内容截图发回，就能判断是「代码没更新」还是「UA 没识别」。</p>
 
   <div class="card">
-    <div class="row"><div class="k">页面版本</div><div class="v"><span class="build" id="dBuild">BUILD 2026-11-14-r3</span> <span id="dBuildHint"></span></div></div>
+    <div class="row"><div class="k">页面版本</div><div class="v"><span class="build" id="dBuild">BUILD 2026-11-15-r4</span> <span id="dBuildHint"></span></div></div>
     <div class="row"><div class="k">当前网址</div><div class="v" id="dUrl">—</div></div>
     <div class="row"><div class="k">完整 UA</div><div class="v" id="dUa">—</div></div>
   </div>
@@ -50,11 +50,15 @@
     <div class="row"><div class="k">旧跳过标记</div><div class="v" id="dSkip">—</div></div>
   </div>
 
-  <div class="tip" id="dTip">如果这个页面打不开（404），或版本号不是 r3，说明线上还是旧代码 / 微信缓存。把仓库重新推送后，给网址加个随机参数再打开，例如 <code>?t=1123</code>，可绕过缓存。</div>
+  <div class="card">
+    <div class="row"><div class="k">跳转规则</div><div class="v">微信内打开 <code>index.html</code> → 跳 <code>wechat.html</code>（无参数）；<b>非微信 UA 打开 <code>wechat.html</code>，无论带什么参数，一律回 <code>index.html</code></b>。看引导图请用独立静态预览页 <code>guide-preview.html</code>，它不含跳转、不吃参数。</div></div>
+  </div>
+
+  <div class="tip" id="dTip">如果这个页面打不开（404），或版本号不是 r4，说明线上还是旧代码 / 微信缓存。把仓库重新推送后，给网址加个随机参数再打开，例如 <code>?t=1123</code>，可绕过缓存。</div>
 
   <div class="btns">
-    <a class="btn" href="wechat.html?preview=1">手动打开引导页</a>
-    <a class="btn plain" href="index.html?wx=1">测试自动跳转</a>
+    <a class="btn" href="guide-preview.html">打开引导图静态预览</a>
+    <a class="btn plain" href="wechat.html">打开线上引导页（外部浏览器会回主页）</a>
     <a class="btn plain" href="index.html?nowx=1">打开下载页</a>
     <button class="btn plain" type="button" id="dClear">清除旧标记并刷新</button>
   </div>
@@ -85,14 +89,13 @@
   put('dOther', yn(other), other);
   put('dMini', yn(mini), mini);
   put('dBridge', yn(bridge), bridge);
-  put('dFinal', yes ? '判定为微信环境 → 应跳到 wechat.html?from=wx' : '判定为普通浏览器 → 应留在下载页', yes);
+  put('dFinal', yes ? '判定为微信环境 → 应跳到 wechat.html' : '判定为普通浏览器 → 应留在下载页 / 打开引导页会回下载页', yes);
 
   var q = location.search;
   var expect;
   if (/[?&]nowx=1(?:&|$)/.test(q)) expect = 'nowx=1：强制留在下载页';
-  else if (/[?&]wx=1(?:&|$)/.test(q)) expect = 'wx=1：强制跳到引导页预览';
-  else if (yes) expect = '微信环境：跳到 wechat.html?from=wx';
-  else expect = '普通浏览器：留在下载页';
+  else if (yes) expect = '微信环境：跳到 wechat.html（无参数）';
+  else expect = '普通浏览器：留在下载页；若打开 wechat.html 会自动回下载页';
   put('dExpect', expect);
 
   var skip = '(无)';
@@ -100,7 +103,7 @@
   put('dSkip', skip + '　（新版已不再使用此标记）');
 
   var ver = document.getElementById('dBuild').textContent;
-  put('dBuildHint', /r3$/.test(ver) ? '· 已是最新版' : '· 版本偏旧');
+  put('dBuildHint', /r4$/.test(ver) ? '· 已是最新版' : '· 版本偏旧');
 
   document.getElementById('dClear').addEventListener('click', function () {
     try { sessionStorage.removeItem('suyuan-wx-skip'); } catch (e) {}
