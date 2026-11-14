@@ -3,7 +3,18 @@
    配色取自 子午流注.js 内的五套 THEMES，页面主题与 App 内主题一一对应
    ========================================================================== */
 
+/* 默认主题：青瓷月白。:root 直接给青瓷变量，保证首帧与脚本未执行时都不闪米白 */
 :root,
+[data-theme="qingci"] {
+  --bg: #F1F6F5; --card: #FFFFFF; --ink: #1E3330; --sub: #8FA09C;
+  --accent: #3E7C74; --accent-deep: #2A5A54; --on-accent: #FFFFFF;
+  --gold: #9FB8AE; --gold-ink: #5C7F78; --line: #E3ECE9;
+  --soft: #E9F1EF; --soft-green: #DFF0E8;
+  --seal: #B0705E; --grid: rgba(62, 124, 116, .05);
+  --shadow: 0 18px 48px rgba(30, 70, 65, .09);
+  --shadow-sm: 0 6px 18px rgba(30, 70, 65, .06);
+  color-scheme: light;
+}
 [data-theme="suwen"] {
   --bg: #F7F6F3; --card: #FFFFFF; --ink: #1A1A1A; --sub: #85847D;
   --accent: #1E6B5A; --accent-deep: #0E3B36; --on-accent: #FFFFFF;
@@ -33,16 +44,6 @@
   --shadow: 0 18px 48px rgba(0, 0, 0, .38);
   --shadow-sm: 0 6px 18px rgba(0, 0, 0, .28);
   color-scheme: dark;
-}
-[data-theme="qingci"] {
-  --bg: #F1F6F5; --card: #FFFFFF; --ink: #1E3330; --sub: #8FA09C;
-  --accent: #3E7C74; --accent-deep: #2A5A54; --on-accent: #FFFFFF;
-  --gold: #9FB8AE; --gold-ink: #5C7F78; --line: #E3ECE9;
-  --soft: #E9F1EF; --soft-green: #DFF0E8;
-  --seal: #B0705E; --grid: rgba(62, 124, 116, .05);
-  --shadow: 0 18px 48px rgba(30, 70, 65, .09);
-  --shadow-sm: 0 6px 18px rgba(30, 70, 65, .06);
-  color-scheme: light;
 }
 [data-theme="dailan"] {
   --bg: #EEF1F6; --card: #FFFFFF; --ink: #22304A; --sub: #8B96A8;

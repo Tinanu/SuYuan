@@ -75,7 +75,7 @@
     dailan:  { name: '黛蓝雅灰' }
   };
   function setTheme(id, remember) {
-    if (!THEME_META[id]) id = 'suwen';
+    if (!THEME_META[id]) id = 'qingci';
     document.documentElement.setAttribute('data-theme', id);
     $$('.theme-dots button, .theme-card').forEach(function (el) {
       el.classList.toggle('active', el.getAttribute('data-theme') === id);
@@ -91,7 +91,7 @@
   $$('.theme-dots button, .theme-card').forEach(function (el) {
     el.addEventListener('click', function () { setTheme(el.getAttribute('data-theme')); });
   });
-  setTheme(document.documentElement.getAttribute('data-theme') || 'suwen', false);
+  setTheme(document.documentElement.getAttribute('data-theme') || 'qingci', false);
 
   /* ---------------- 下载区 ---------------- */
   var state = FALLBACK;
