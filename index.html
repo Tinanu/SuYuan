@@ -1,0 +1,379 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-theme="suwen">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>溯源 · 子午流注学习台 ｜ 官方下载</title>
+<meta name="description" content="溯源（子午流注 · 素问极简版）官方下载页。十二时辰经络流注、纳甲开穴、二十八脉、18 类练习模块，完全离线可用。">
+<meta name="theme-color" content="#F7F6F3">
+<link rel="icon" href="assets/favicon.ico" sizes="any">
+<link rel="icon" href="assets/favicon.png" type="image/png">
+<link rel="apple-touch-icon" href="assets/favicon.png">
+
+<!-- 首帧同步上色：在样式生效前恢复记住的主题，避免整屏闪一下默认米白 -->
+<script>
+(function () {
+  try {
+    var t = localStorage.getItem('suyuan-theme');
+    if (t && ['suwen','xuanzhi','moye','qingci','dailan'].indexOf(t) > -1) {
+      document.documentElement.setAttribute('data-theme', t);
+    }
+  } catch (e) {}
+})();
+</script>
+<link rel="stylesheet" href="assets/style.css">
+</head>
+<body>
+
+<div class="page-grid" aria-hidden="true"></div>
+
+<header class="site-header" id="header">
+  <div class="header-inner">
+    <a class="brand" href="#top" aria-label="溯源 首页">
+      <img class="brand-logo" src="assets/logo.png" alt="溯源 Logo" width="44" height="44">
+      <span class="brand-text">
+        <strong>溯源</strong>
+        <small>子午流注 · 素问极简</small>
+      </span>
+    </a>
+
+    <nav class="nav" id="nav" aria-label="页面导航">
+      <a href="#features" class="nav-link">功能</a>
+      <a href="#hours" class="nav-link">十二时辰</a>
+      <a href="#themes" class="nav-link">主题</a>
+      <a href="#changelog" class="nav-link">更新</a>
+      <a href="#faq" class="nav-link">帮助</a>
+    </nav>
+
+    <div class="header-actions">
+      <div class="theme-dots" role="group" aria-label="切换页面主题">
+        <button type="button" data-theme="suwen"    style="--dot:#1E6B5A;--dot-bg:#F7F6F3" title="素问墨绿" aria-label="素问墨绿"></button>
+        <button type="button" data-theme="xuanzhi"  style="--dot:#B24A3B;--dot-bg:#FAF3E4" title="宣纸朱印" aria-label="宣纸朱印"></button>
+        <button type="button" data-theme="moye"     style="--dot:#E3C88E;--dot-bg:#15181A" title="墨夜浅金" aria-label="墨夜浅金"></button>
+        <button type="button" data-theme="qingci"   style="--dot:#3E7C74;--dot-bg:#F1F6F5" title="青瓷月白" aria-label="青瓷月白"></button>
+        <button type="button" data-theme="dailan"   style="--dot:#3B5B8C;--dot-bg:#EEF1F6" title="黛蓝雅灰" aria-label="黛蓝雅灰"></button>
+      </div>
+      <a id="githubLink" class="btn btn-ghost header-github" href="#" target="_blank" rel="noopener" hidden>
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2a10 10 0 0 0-3.16 19.49c.5.09.68-.22.68-.48v-1.7c-2.78.61-3.37-1.34-3.37-1.34-.45-1.16-1.11-1.47-1.11-1.47-.91-.62.07-.61.07-.61 1 .07 1.53 1.03 1.53 1.03.89 1.53 2.34 1.09 2.91.83.09-.65.35-1.09.63-1.34-2.22-.25-4.55-1.11-4.55-4.94 0-1.09.39-1.98 1.03-2.68-.1-.25-.45-1.27.1-2.64 0 0 .84-.27 2.75 1.02a9.5 9.5 0 0 1 5 0c1.91-1.29 2.75-1.02 2.75-1.02.55 1.37.2 2.39.1 2.64.64.7 1.03 1.59 1.03 2.68 0 3.84-2.34 4.68-4.57 4.93.36.31.68.92.68 1.85v2.74c0 .27.18.58.69.48A10 10 0 0 0 12 2Z"/></svg>
+        <span>仓库</span>
+      </a>
+      <a class="btn btn-primary header-download" href="#download">下载</a>
+      <button type="button" class="nav-toggle" id="navToggle" aria-label="展开菜单" aria-expanded="false" aria-controls="nav">
+        <span></span><span></span><span></span>
+      </button>
+    </div>
+  </div>
+</header>
+
+<main>
+  <!-- ===================== HERO ===================== -->
+  <section class="hero" id="top">
+    <div class="hero-orbit" aria-hidden="true"><span></span><span></span><span></span></div>
+    <div class="wrap hero-inner">
+      <div class="hero-copy reveal">
+        <div class="eyebrow"><i></i> 循经按时 · 溯源而学 <span class="eyebrow-ver" id="heroVersion">v1.0.2</span></div>
+        <h1>溯<span>源</span></h1>
+        <p class="hero-sub">把十二时辰、经络流注与二十八脉，<br>收进一方安静的学习台。</p>
+        <p class="hero-quote">肺寅大卯胃辰宫，脾巳心午小未中，<br>申膀酉肾心包戌，亥焦子胆丑肝通。</p>
+        <div class="hero-badges">
+          <span><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 2h10a2 2 0 0 1 2 2v16a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2Zm4 18h2"/></svg>Android</span>
+          <span><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3 4 6v6c0 5 3.4 8.2 8 9 4.6-.8 8-4 8-9V6l-8-3Z"/><path d="m9 12 2 2 4-4"/></svg>完全离线</span>
+          <span><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>实时时辰</span>
+        </div>
+        <div class="hero-cta">
+          <a class="btn btn-primary btn-lg" href="#download">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v12m0 0 4-4m-4 4-4-4M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2"/></svg>
+            <span id="heroBtnText">下载溯源 v1.0.2</span>
+          </a>
+          <a class="btn btn-outline btn-lg" href="#features">了解功能</a>
+        </div>
+        <p class="hero-meta" id="heroMeta">版本 v1.0.2 · 4.16 MB · Android 7.0+ · 无网络依赖</p>
+      </div>
+
+      <div class="hero-visual reveal" aria-label="应用界面示意">
+        <div class="visual-halo" aria-hidden="true"></div>
+        <div class="float-chip chip-a"><b>28</b> 脉动态图<span>离线内嵌</span></div>
+        <div class="float-chip chip-b"><b>5</b> 套主题<span>记住你选的那套</span></div>
+        <div class="phone">
+          <div class="phone-notch" aria-hidden="true"></div>
+          <div class="phone-screen">
+            <div class="phone-status"><span>11:26</span><span class="phone-status-icons">●●● ▮</span></div>
+            <div class="phone-top">
+              <span class="phone-label">学习台</span>
+              <span class="phone-hour" id="phoneHour">午时 · 心经当令</span>
+            </div>
+            <div class="phone-card">
+              <div class="phone-card-title">今日学习 <span>实时</span></div>
+              <div class="phone-numbers">
+                <div><b>36</b><small>已答题</small></div>
+                <div><b>92%</b><small>正确率</small></div>
+                <div><b>07</b><small>连续天数</small></div>
+              </div>
+            </div>
+            <div class="phone-card">
+              <div class="phone-card-title">模块掌握度 <span>18 类</span></div>
+              <div class="phone-bar"><label>时辰寻经</label><i style="--w:88%"></i><em>88%</em></div>
+              <div class="phone-bar"><label>纳甲开穴</label><i style="--w:64%"></i><em>64%</em></div>
+              <div class="phone-bar"><label>经络寻穴</label><i style="--w:47%"></i><em>47%</em></div>
+            </div>
+            <div class="phone-tip">口诀 · 肺寅大卯胃辰宫，脾巳心午小未中</div>
+            <div class="phone-tabs">
+              <span class="on"><i></i>首页</span><span><i></i>经络</span><span><i></i>脉象</span><span><i></i>成绩</span><span><i></i>设置</span>
+            </div>
+          </div>
+        </div>
+        <p class="visual-caption">界面示意 · 数据仅作演示</p>
+      </div>
+    </div>
+    <a href="#stats" class="scroll-hint" aria-label="向下浏览"><span></span></a>
+  </section>
+
+  <!-- ===================== STATS ===================== -->
+  <section class="stats" id="stats">
+    <div class="wrap stats-grid">
+      <div class="stat reveal"><b>18</b><span>类练习模块</span></div>
+      <div class="stat reveal"><b>361</b><span>穴位全覆盖</span></div>
+      <div class="stat reveal"><b>28</b><span>脉动态图</span></div>
+      <div class="stat reveal"><b>12</b><span>时辰流注</span></div>
+      <div class="stat reveal"><b>0</b><span>网络请求</span></div>
+    </div>
+    <p class="stats-note">题库、解析、口诀与脉象页全部内嵌在应用内，飞行模式下照样练。</p>
+  </section>
+
+  <!-- ===================== FEATURES ===================== -->
+  <section class="section" id="features">
+    <div class="wrap">
+      <div class="section-head reveal">
+        <span class="section-kicker">一方学习台</span>
+        <h2>从时辰到脉象，都在同一处</h2>
+        <p>首页 / 经络 / 脉象 / 成绩 / 设置，五个页签把「记」与「练」串成一条线。</p>
+      </div>
+      <div class="feature-grid">
+        <article class="feature-card reveal">
+          <div class="feature-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 20h18M5 20V9l7-5 7 5v11M9 20v-6h6v6"/></svg></div>
+          <h3>学习台</h3>
+          <p>实时显示当下时辰与当令经脉，累计答题、正确率与 18 类模块掌握度一眼可见。</p>
+        </article>
+        <article class="feature-card reveal">
+          <div class="feature-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 3v9l6 3M12 12 6 9"/></svg></div>
+          <h3>经络流注</h3>
+          <p>时辰寻经、经脉寻时、纳甲开穴、五输穴五行与流注次序，配纳子法歌诀记忆。</p>
+        </article>
+        <article class="feature-card reveal">
+          <div class="feature-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M2 12h4l2-6 3 12 3-9 2 5h6"/></svg></div>
+          <h3>二十八脉</h3>
+          <p>独立「脉象」页签内的动态脉图，离线 HTML 内嵌，沉浸式状态栏，随时翻阅。</p>
+        </article>
+        <article class="feature-card reveal">
+          <div class="feature-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5h16v14H4zM8 9h8M8 13h6M8 17h4"/></svg></div>
+          <h3>题库练习</h3>
+          <p>18 类题型、361 穴主治覆盖，支持综合演练、收藏、错题与逐题解析。</p>
+        </article>
+        <article class="feature-card reveal">
+          <div class="feature-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 19V9m5 10V5m5 14v-7m5 7V8"/><path d="M2 21h20"/></svg></div>
+          <h3>成绩档案</h3>
+          <p>成绩单独立落盘并额外写一份外部备份，覆盖安装、清数据后也能找回来。</p>
+        </article>
+        <article class="feature-card reveal">
+          <div class="feature-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 3a9 9 0 0 1 0 18z" fill="currentColor" stroke="none"/><path d="M12 3v18"/></svg></div>
+          <h3>外观与设置</h3>
+          <p>五套主题自由切换并记住选择；冷启动首帧同步上色，不再闪一下默认底色。</p>
+        </article>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===================== HOURS ===================== -->
+  <section class="section section-tint" id="hours">
+    <div class="wrap hours-inner">
+      <div class="hours-copy reveal">
+        <span class="section-kicker">子午流注</span>
+        <h2>一时辰，一经脉</h2>
+        <p>气血随十二时辰在经脉间流注。点一点右侧圆环，看看此刻是谁当令。</p>
+        <div class="gatha">
+          <span>纳子法歌诀</span>
+          <p>肺寅大卯胃辰宫，脾巳心午小未中，<br>申膀酉肾心包戌，亥焦子胆丑肝通。</p>
+        </div>
+        <p class="hours-note">应用内「时辰寻经 / 经脉寻时」两类题统一提示此口诀。</p>
+      </div>
+      <div class="hours-wheel reveal">
+        <svg id="hourWheel" viewBox="0 0 420 420" role="group" aria-label="十二时辰经络流注环"></svg>
+        <div class="wheel-center">
+          <span class="wheel-now" id="wheelNow">此刻</span>
+          <strong id="wheelHour">午时</strong>
+          <span class="wheel-meridian" id="wheelMeridian">手少阴心经</span>
+          <span class="wheel-time" id="wheelTime">11:00 – 13:00</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===================== THEMES ===================== -->
+  <section class="section" id="themes">
+    <div class="wrap">
+      <div class="section-head reveal">
+        <span class="section-kicker">五套外观</span>
+        <h2>挑一套，页面就换成它</h2>
+        <p>和 App 里同款的五套主题。点击色卡即可预览整站配色，选择会被记住。</p>
+      </div>
+      <div class="theme-grid" id="themeGrid">
+        <button type="button" class="theme-card" data-theme="suwen" style="--c-bg:#F7F6F3;--c-accent:#1E6B5A;--c-gold:#C8A96A;--c-ink:#1A1A1A">
+          <span class="theme-preview"><i></i><i></i><i></i></span>
+          <span class="theme-name">素问墨绿<small>米白宣纸 + 墨绿 + 金线，清雅克制</small></span>
+        </button>
+        <button type="button" class="theme-card" data-theme="xuanzhi" style="--c-bg:#FAF3E4;--c-accent:#B24A3B;--c-gold:#B5701E;--c-ink:#33291E">
+          <span class="theme-preview"><i></i><i></i><i></i></span>
+          <span class="theme-name">宣纸朱印<small>暖黄宣纸 + 朱红印章 + 墨字，古意最浓</small></span>
+        </button>
+        <button type="button" class="theme-card" data-theme="moye" style="--c-bg:#15181A;--c-accent:#E3C88E;--c-gold:#8C7850;--c-ink:#F0EDE6">
+          <span class="theme-preview"><i></i><i></i><i></i></span>
+          <span class="theme-name">墨夜浅金<small>中性墨黑 + 三级浅金，夜间护眼</small></span>
+        </button>
+        <button type="button" class="theme-card" data-theme="qingci" style="--c-bg:#F1F6F5;--c-accent:#3E7C74;--c-gold:#9FB8AE;--c-ink:#1E3330">
+          <span class="theme-preview"><i></i><i></i><i></i></span>
+          <span class="theme-name">青瓷月白<small>冷月白 + 青瓷釉色，清透素净</small></span>
+        </button>
+        <button type="button" class="theme-card" data-theme="dailan" style="--c-bg:#EEF1F6;--c-accent:#3B5B8C;--c-gold:#A8B4C8;--c-ink:#22304A">
+          <span class="theme-preview"><i></i><i></i><i></i></span>
+          <span class="theme-name">黛蓝雅灰<small>雾灰蓝 + 黛青，沉静现代</small></span>
+        </button>
+      </div>
+      <p class="theme-status">当前页面主题：<b id="themeStatusName">素问墨绿</b></p>
+    </div>
+  </section>
+
+  <!-- ===================== DOWNLOAD ===================== -->
+  <section class="section section-download" id="download">
+    <div class="wrap">
+      <div class="section-head reveal">
+        <span class="section-kicker">获取应用</span>
+        <h2>下载溯源</h2>
+        <p>文件直接放在本站的 <code>appAPK/</code> 目录里，点击即从本站下载，不跳转、不依赖第三方网盘。</p>
+      </div>
+
+      <div class="download-layout">
+        <div class="download-card reveal" id="downloadCard">
+          <div class="download-card-top">
+            <img src="assets/logo.png" alt="" width="64" height="64">
+            <div>
+              <span class="download-label" id="dlLabel">Android 安装包</span>
+              <h3 id="dlTitle">溯源 · Android 安装包</h3>
+              <p id="dlHint">Android 7.0+ · 下载后直接安装</p>
+            </div>
+            <span class="version-chip" id="dlVersion">v1.0.2</span>
+          </div>
+
+          <div class="download-meta" id="dlMeta">
+            <div><span>文件大小</span><b id="dlSize">4.16 MB</b></div>
+            <div><span>更新日期</span><b id="dlDate">2026-11-14</b></div>
+            <div><span>运行平台</span><b id="dlPlatform">Android 7.0+</b></div>
+          </div>
+
+          <a class="btn btn-primary btn-lg btn-block" id="dlMainBtn" href="appAPK/%E6%BA%AF%E6%BA%90.apk" download="溯源-v1.0.2.apk">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v12m0 0 4-4m-4 4-4-4M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2"/></svg>
+            <span id="dlMainText">下载安装包 · v1.0.2</span>
+          </a>
+
+          <div class="sha-row" id="shaRow">
+            <span>SHA-256</span>
+            <code id="dlSha">6b70d16252c85cd3 … 1d81804999</code>
+            <button type="button" class="mini-btn" id="copySha" aria-label="复制校验值">复制</button>
+          </div>
+
+          <div class="download-notice" id="dlNotice">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 8h.01M11 12h1v4h1"/></svg>
+            <p>安装包暂时不可用，请稍后再来，或联系开发者获取 <b>溯源.apk</b>。</p>
+          </div>
+
+          <div class="other-downloads" id="dlOthers"></div>
+        </div>
+
+        <div class="install-steps reveal">
+          <h3>三步开始用</h3>
+          <ol>
+            <li><span>01</span><div><b>下载文件</b><p>点击左侧按钮，文件保存在本机，可直接校验 SHA-256。</p></div></li>
+            <li><span>02</span><div><b>直接安装</b><p>点击 APK 安装，在系统提示中允许「未知来源」，无需任何额外运行环境。</p></div></li>
+            <li><span>03</span><div><b>离线开练</b><p>题库、口诀与脉象页都在本地，无需联网、无需登录。</p></div></li>
+          </ol>
+          <div class="install-tip">
+            <b>关于这个安装包</b>
+            <p><b>溯源.apk</b> 是完整的 Android 安装包，装完即可打开。当前为开发调试版，系统可能提示「应用未经验证」或「未知来源」，允许后继续；下载前可对照上方 SHA-256 校验文件完整性。</p>
+          </div>
+        </div>
+      </div>
+
+      <details class="maintainer reveal">
+        <summary>维护者 · 如何更新下载文件 / 部署到 GitHub Pages</summary>
+        <div class="maintainer-body">
+          <ol>
+            <li>把安装包放进 <code>appAPK/</code> 目录，建议命名为 <code>溯源.apk</code>（放别的文件也行，页面会全部列出）。</li>
+            <li>在项目根目录执行 <code>node build.js</code>，自动刷新 <code>releases.json</code> 里的版本、大小、日期与校验值；版本号在 <code>build.js</code> 的 <code>SITE.version</code> 中修改，与 App 内 <code>config.js</code> 的 <code>LOCAL_VERSION</code> 保持一致。</li>
+            <li>提交并推送：<code>git add . &amp;&amp; git commit -m "release" &amp;&amp; git push</code>。注意 <code>.gitignore</code> 不能排除 <code>appAPK/</code>，否则线上没有文件可下。</li>
+            <li>GitHub 仓库 → Settings → Pages → Build and deployment 选 <b>Deploy from a branch</b>，分支 <b>main</b>、目录 <b>/ (root)</b>，保存后等一两分钟即可访问。</li>
+          </ol>
+          <p>即使忘记跑 <code>build.js</code>，页面也会探测 <code>appAPK/溯源.apk</code>，并把目录里的其它文件作为备用下载。单文件超过 100 MB 时，GitHub 仓库会拒绝提交，建议改放 GitHub Releases。</p>
+          <p>想显示右上角「仓库」按钮，在 <code>build.js</code> 的 <code>SITE.github</code> 填入仓库地址后重新生成清单。</p>
+        </div>
+      </details>
+    </div>
+  </section>
+
+  <!-- ===================== CHANGELOG ===================== -->
+  <section class="section section-tint" id="changelog">
+    <div class="wrap changelog-inner">
+      <div class="section-head reveal">
+        <span class="section-kicker">更新记录</span>
+        <h2>当前版本 v1.0.2</h2>
+        <p>版本信息与 App 内 <code>config.js</code> 的 <code>LOCAL_VERSION</code> 保持一致。</p>
+      </div>
+      <div class="release reveal">
+        <div class="release-head"><span class="release-tag">v1.0.2</span><span class="release-date" id="releaseDate">2026-11</span></div>
+        <ul>
+          <li><b>新增脉象页</b>「脉象」页签与二十八脉动态图，本地 HTML 离线内嵌，无网络依赖。</li>
+          <li><b>首帧同步上色</b>冷启动直接读取记住的主题，消除先显示默认底色再切换的整屏跳变。</li>
+          <li><b>成绩更稳</b>成绩独立落盘 + 外部文件备份，三方合并去重，覆盖安装 / 清数据后仍可恢复。</li>
+          <li><b>口诀统一</b>「时辰寻经 / 经脉寻时」及历史存档题的技巧统一为纳子法歌诀。</li>
+          <li><b>五套主题</b>素问墨绿、宣纸朱印、墨夜浅金、青瓷月白、黛蓝雅灰，切换后自动记忆。</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===================== FAQ ===================== -->
+  <section class="section" id="faq">
+    <div class="wrap faq-inner">
+      <div class="section-head reveal">
+        <span class="section-kicker">常见问题</span>
+        <h2>下载前先看这里</h2>
+      </div>
+      <div class="faq-list reveal">
+        <details open><summary>需要联网吗？<i></i></summary><p>不需要。题库、解析、口诀与二十八脉动态页都内嵌在应用里，飞行模式也能练；只有「检查更新」会访问网络。</p></details>
+        <details><summary>iPhone / iOS 能用吗？<i></i></summary><p>目前只提供 Android 安装包（APK），iPhone / iPad 暂不支持。</p></details>
+        <details><summary>安装时被系统拦住怎么办？<i></i></summary><p>在系统提示中允许「安装未知来源应用」；部分机型还需临时关闭「纯净模式」或「安装监控」，装完可重新开启。</p></details>
+        <details><summary>提示「应用未经验证」安全吗？<i></i></summary><p>当前是开发调试版（debug 签名），系统因此会给出提示。文件由本站直接提供，下载后可用上方 SHA-256 核对完整性；确认一致再安装，不要从第三方渠道获取同名安装包。</p></details>
+        <details><summary>覆盖安装会丢成绩吗？<i></i></summary><p>学习档案与成绩保存在本机，应用内提供成绩单与历史记录；大版本更新前建议先记录一下重要数据。</p></details>
+        <details><summary>内容可以当作诊疗依据吗？<i></i></summary><p>不可以。本应用用于中医经典内容的记忆与练习，不构成诊断、治疗或用药建议，身体不适请就医。</p></details>
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer class="site-footer">
+  <div class="wrap footer-inner">
+    <div class="footer-brand">
+      <img src="assets/logo.png" alt="溯源 Logo" width="52" height="52">
+      <div><strong>溯源</strong><span>子午流注 · 素问极简版</span></div>
+    </div>
+    <div class="footer-info">
+      <p>联系开发者 QQ：<button type="button" class="link-btn" id="qqBtn" title="点击复制">1241611627</button></p>
+      <p class="disclaimer">本站内容仅供中医学习与记忆练习，不构成任何医疗建议。软件与文件均为本站直接提供，请勿从第三方渠道获取。</p>
+    </div>
+  </div>
+  <div class="footer-bottom"><span>© <span id="year">2026</span> 溯源</span><span>循经按时 · 溯源而学</span></div>
+</footer>
+
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<script src="assets/app.js"></script>
+</body>
+</html>

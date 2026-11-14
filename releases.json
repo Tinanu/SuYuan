@@ -1,0 +1,26 @@
+{
+  "app": "溯源",
+  "version": "1.0.2",
+  "subtitle": "子午流注 · 素问极简版",
+  "qq": "1241611627",
+  "github": "",
+  "generated": "2026-11-14T14:11:27.230Z",
+  "primaryName": "溯源.apk",
+  "primaryUrl": "appAPK/%E6%BA%AF%E6%BA%90.apk",
+  "files": [
+    {
+      "file": "溯源.apk",
+      "title": "溯源",
+      "label": "Android 安装包",
+      "hint": "Android 7.0+ · 下载后直接安装",
+      "kind": "apk",
+      "priority": 0,
+      "ext": ".apk",
+      "size": 4364871,
+      "sha256": "6b70d16252c85cd377a15fcb35ec3989335a7488bbbc5dd0667ce51d81804999",
+      "updated": "2026-11-14",
+      "url": "appAPK/%E6%BA%AF%E6%BA%90.apk",
+      "download": "溯源-v1.0.2.apk"
+    }
+  ]
+}
