@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>微信跳转自检 · 溯源</title>
+<style>
+  * { box-sizing: border-box; }
+  body { margin: 0; padding: 20px 16px 40px; background: #F1F6F5; color: #1E3330;
+         font: 15px/1.7 -apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei", sans-serif; }
+  .wrap { max-width: 620px; margin: 0 auto; }
+  h1 { font-size: 20px; margin: 0 0 6px; }
+  .lead { color: #6B817D; font-size: 13px; margin: 0 0 18px; }
+  .card { background: #fff; border: 1px solid #E3ECE9; border-radius: 12px; padding: 14px 16px; margin: 0 0 14px; }
+  .row { display: flex; gap: 10px; padding: 7px 0; border-bottom: 1px solid #EEF3F1; align-items: flex-start; }
+  .row:last-child { border-bottom: 0; }
+  .k { flex: 0 0 96px; color: #8FA09C; font-size: 13px; }
+  .v { flex: 1; min-width: 0; word-break: break-all; font-size: 13px; }
+  .yes { color: #1E6B5A; font-weight: 600; }
+  .no  { color: #B24A3B; font-weight: 600; }
+  code { background: #E9F1EF; padding: 1px 5px; border-radius: 4px; font-size: 12px; }
+  .btns { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 4px; }
+  a.btn, button.btn { display: inline-block; border: 1px solid #3E7C74; border-radius: 999px;
+    padding: 9px 16px; background: #3E7C74; color: #fff; font-size: 14px; text-decoration: none; cursor: pointer; }
+  a.btn.plain, button.btn.plain { background: transparent; color: #3E7C74; }
+  .tip { background: #FAECE7; border: 1px solid #E7C4BC; border-radius: 10px; padding: 12px 14px;
+         font-size: 13px; color: #7A3B31; margin: 0 0 14px; }
+  .build { display: inline-block; background: #3E7C74; color: #fff; border-radius: 6px;
+           padding: 2px 8px; font-size: 12px; letter-spacing: .5px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>微信跳转自检</h1>
+  <p class="lead">在微信里打开本页，把下面内容截图发回，就能判断是「代码没更新」还是「UA 没识别」。</p>
+
+  <div class="card">
+    <div class="row"><div class="k">页面版本</div><div class="v"><span class="build" id="dBuild">BUILD 2026-11-14-r3</span> <span id="dBuildHint"></span></div></div>
+    <div class="row"><div class="k">当前网址</div><div class="v" id="dUrl">—</div></div>
+    <div class="row"><div class="k">完整 UA</div><div class="v" id="dUa">—</div></div>
+  </div>
+
+  <div class="card">
+    <div class="row"><div class="k">MicroMessenger</div><div class="v" id="dMm">—</div></div>
+    <div class="row"><div class="k">wxwork / 其它关键字</div><div class="v" id="dOther">—</div></div>
+    <div class="row"><div class="k">小程序环境</div><div class="v" id="dMini">—</div></div>
+    <div class="row"><div class="k">WeixinJSBridge</div><div class="v" id="dBridge">—</div></div>
+    <div class="row"><div class="k">综合判定</div><div class="v" id="dFinal">—</div></div>
+    <div class="row"><div class="k">预期动作</div><div class="v" id="dExpect">—</div></div>
+    <div class="row"><div class="k">旧跳过标记</div><div class="v" id="dSkip">—</div></div>
+  </div>
+
+  <div class="tip" id="dTip">如果这个页面打不开（404），或版本号不是 r3，说明线上还是旧代码 / 微信缓存。把仓库重新推送后，给网址加个随机参数再打开，例如 <code>?t=1123</code>，可绕过缓存。</div>
+
+  <div class="btns">
+    <a class="btn" href="wechat.html?preview=1">手动打开引导页</a>
+    <a class="btn plain" href="index.html?wx=1">测试自动跳转</a>
+    <a class="btn plain" href="index.html?nowx=1">打开下载页</a>
+    <button class="btn plain" type="button" id="dClear">清除旧标记并刷新</button>
+  </div>
+</div>
+
+<script>
+(function () {
+  var ua = navigator.userAgent || '';
+  var mm = /MicroMessenger/i.test(ua);
+  var other = /wxwork|WeChat|weixin|MMWEBIDEA|Micro Messenger/i.test(ua);
+  var mini = false, bridge = false;
+  try { mini = window.__wxjs_environment === 'miniprogram'; } catch (e) {}
+  try { bridge = typeof WeixinJSBridge !== 'undefined' && /Mobile|Android|iPhone|iPad/i.test(ua); } catch (e) {}
+  var yes = mm || other || mini || bridge;
+
+  function put(id, text, ok) {
+    var el = document.getElementById(id);
+    if (!el) return;
+    el.textContent = text;
+    if (ok === true) el.className = 'v yes';
+    if (ok === false) el.className = 'v no';
+  }
+  function yn(b) { return b ? '是 ✓' : '否'; }
+
+  put('dUrl', location.href);
+  put('dUa', ua || '(空)');
+  put('dMm', yn(mm), mm);
+  put('dOther', yn(other), other);
+  put('dMini', yn(mini), mini);
+  put('dBridge', yn(bridge), bridge);
+  put('dFinal', yes ? '判定为微信环境 → 应跳到 wechat.html?from=wx' : '判定为普通浏览器 → 应留在下载页', yes);
+
+  var q = location.search;
+  var expect;
+  if (/[?&]nowx=1(?:&|$)/.test(q)) expect = 'nowx=1：强制留在下载页';
+  else if (/[?&]wx=1(?:&|$)/.test(q)) expect = 'wx=1：强制跳到引导页预览';
+  else if (yes) expect = '微信环境：跳到 wechat.html?from=wx';
+  else expect = '普通浏览器：留在下载页';
+  put('dExpect', expect);
+
+  var skip = '(无)';
+  try { skip = sessionStorage.getItem('suyuan-wx-skip') || '(无)'; } catch (e) { skip = '(不可读)'; }
+  put('dSkip', skip + '　（新版已不再使用此标记）');
+
+  var ver = document.getElementById('dBuild').textContent;
+  put('dBuildHint', /r3$/.test(ver) ? '· 已是最新版' : '· 版本偏旧');
+
+  document.getElementById('dClear').addEventListener('click', function () {
+    try { sessionStorage.removeItem('suyuan-wx-skip'); } catch (e) {}
+    location.replace('diag.html?t=' + Date.now());
+  });
+})();
+</script>
+</body>
+</html>

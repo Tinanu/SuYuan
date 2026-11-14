@@ -10,15 +10,24 @@
 <link rel="icon" href="assets/favicon.png" type="image/png">
 
 <!-- 这个页面只负责「微信引导」。
-     微信里由 index.html 首帧跳转过来；用户点「在浏览器中打开」后，
-     系统浏览器打开的本页会自动跳回 index.html，直接看到下载按钮。
-     ?wx=1 可在普通浏览器强制预览本页（不跳走）。 -->
+     只有「从微信点『在浏览器中打开』过来」时才自动跳回下载页：
+     即 URL 带 from=wx、且当前 UA 不是微信。
+     其余情况（含普通浏览器直接打开、预览面板丢参数）一律停留显示本引导页。 -->
 <script>
 (function () {
+  function isWechat() {
+    var ua = navigator.userAgent || '';
+    if (/MicroMessenger|wxwork|WeChat|weixin|MMWEBIDEA|Micro Messenger/i.test(ua)) return true;
+    try { if (window.__wxjs_environment === 'miniprogram') return true; } catch (e) {}
+    try { if (typeof WeixinJSBridge !== 'undefined' && /Mobile|Android|iPhone|iPad/i.test(ua)) return true; } catch (e) {}
+    return false;
+  }
+  window.__suyuanIsWechat = isWechat;
   try {
-    var force = /[?&]wx=1(?:&|$)/.test(location.search);
-    var inWx = /MicroMessenger|wxwork/i.test(navigator.userAgent);
-    if (!force && !inWx) location.replace('index.html');
+    var q = location.search;
+    var preview = /[?&](?:wx=1|preview=1)(?:&|$)/.test(q);
+    var fromWx = /[?&]from=wx(?:&|$)/.test(q);
+    if (!preview && fromWx && !isWechat()) location.replace('index.html');
   } catch (e) {}
 })();
 </script>
@@ -36,6 +45,10 @@
   </div>
 
   <main class="wx-panel">
+    <div class="wx-preview-bar" id="wxPreviewBar" hidden>
+      <span>当前是浏览器预览 · 线上在微信里打开会自动显示本页</span>
+      <a href="index.html">去下载页 →</a>
+    </div>
     <div class="wx-brand"><img src="assets/logo.png" alt="" width="42" height="42"><span>溯源</span></div>
     <h1 class="wx-title">请在浏览器中打开</h1>
     <p class="wx-lead">微信内置浏览器无法下载 APK 安装包。<br>下面这一张图看完，照着 ① ② 做就能换到系统浏览器。</p>

@@ -255,3 +255,12 @@ svg { width: 1em; height: 1em; fill: none; stroke: currentColor; stroke-width: 1
   html { scroll-behavior: auto; }
   *, *::before, *::after { animation-duration: .001ms !important; transition-duration: .001ms !important; }
 }
+
+/* 浏览器预览提示条（普通浏览器打开引导页时显示） */
+.wx-preview-bar {
+  display: flex; align-items: center; justify-content: center; flex-wrap: wrap; gap: 8px;
+  margin: 0 0 18px; padding: 9px 12px; border: 1px solid var(--line);
+  border-radius: 10px; background: var(--soft); font-size: 12px; color: var(--sub);
+}
+.wx-preview-bar[hidden] { display: none; }
+.wx-preview-bar a { color: var(--accent); font-weight: 600; text-decoration: underline; text-underline-offset: 3px; }

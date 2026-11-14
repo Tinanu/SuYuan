@@ -313,4 +313,25 @@
 
   buildWheel();
   initRelease();
+
+  /* ---------------- 微信跳转第三道保险 ----------------
+     head 与 <body> 开头的跳转都没生效时，DOM 就绪再试一次；
+     若仍停留在下载页且确实是微信，就插一条醒目的手动入口，保证不会「没反应」。
+     引导页加载的是 wechat.js，不会执行这里。 */
+  document.addEventListener('DOMContentLoaded', function () {
+    try {
+      var jumped = window.__suyuanGoWechat && window.__suyuanGoWechat();
+      if (jumped) return;
+      var off = /[?&]nowx=1(?:&|$)/.test(location.search);
+      if (off || !(window.__suyuanIsWechat && window.__suyuanIsWechat())) return;
+      if (document.getElementById('wxFallbackBar')) return;
+      var bar = document.createElement('a');
+      bar.id = 'wxFallbackBar';
+      bar.href = 'wechat.html?preview=1';
+      bar.textContent = '检测到微信内置浏览器：点这里查看「在浏览器中打开」图文指引 →';
+      bar.style.cssText = 'display:block;position:sticky;top:0;z-index:9998;padding:12px 14px;' +
+        'background:#B24A3B;color:#fff;font-size:14px;font-weight:600;text-align:center;text-decoration:none';
+      document.body.insertBefore(bar, document.body.firstChild);
+    } catch (e) {}
+  });
 })();

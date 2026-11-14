@@ -1,15 +1,30 @@
 /* 溯源 · 微信引导页脚本（只服务 wechat.html）
-   这里没有步骤切换：一张完整手机示意图在 HTML 里一次呈现，图上标好 ① ②。
-   本文件只处理：真实域名、iOS 文案、复制下载页链接、跳过标记。 */
+   一张完整手机示意图在 HTML 里一次呈现，图上标好 ① ②，没有步骤切换。
+   本文件只处理：浏览器预览提示、真实域名、iOS 文案、复制下载页链接、跳过标记。 */
 (function () {
   var $ = function (s) { return document.querySelector(s); };
   var $$ = function (s) { return Array.prototype.slice.call(document.querySelectorAll(s)); };
 
-  // 复制给用户的必须是「下载页」链接，而不是引导页本身；同时去掉 wx/nowx 预览参数。
+  function isWechat() {
+    var ua = navigator.userAgent || '';
+    if (/MicroMessenger|wxwork|WeChat|weixin|MMWEBIDEA|Micro Messenger/i.test(ua)) return true;
+    try { if (window.__wxjs_environment === 'miniprogram') return true; } catch (e) {}
+    try { if (typeof WeixinJSBridge !== 'undefined' && /Mobile|Android|iPhone|iPad/i.test(ua)) return true; } catch (e) {}
+    return false;
+  }
+
+  // 普通浏览器打开引导页时停留展示，并说明「这是预览」，避免误以为页面坏了。
+  if (!isWechat()) {
+    var bar = $('#wxPreviewBar');
+    if (bar) bar.hidden = false;
+  }
+
+  // 复制给用户的必须是「下载页」链接，而不是引导页本身；
+  // 同时去掉 wx / nowx / from / preview 这些流程与预览参数。
   function downloadPageUrl() {
     var path = location.pathname.replace(/[^/]*$/, '') + 'index.html';
     var kept = location.search.replace(/^[?&]+/, '').split('&').filter(function (kv) {
-      return kv && !/^(wx|nowx)=/.test(kv);
+      return kv && !/^(wx|nowx|from|preview)=/.test(kv);
     });
     return location.protocol + '//' + location.host + path + (kept.length ? '?' + kept.join('&') : '');
   }
@@ -68,9 +83,9 @@
     copyText(downloadPageUrl(), '链接已复制，打开浏览器粘贴访问');
   });
 
+  // 跳过用 URL 参数 nowx=1 表达，不再写 sessionStorage —— 那个标记会让微信里永久不再跳引导。
   var skipBtn = $('#wxSkip');
   if (skipBtn) skipBtn.addEventListener('click', function () {
-    try { sessionStorage.setItem('suyuan-wx-skip', '1'); } catch (e) {}
     location.href = 'index.html?nowx=1';
   });
 })();
