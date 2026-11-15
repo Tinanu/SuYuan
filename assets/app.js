@@ -247,6 +247,26 @@
     } catch (e) { /* file:// 本地预览读不到清单，交给下方 HEAD 探测 */ }
     var base = data || FALLBACK;
 
+    /* ★ 版本号唯一来源：releases.json 顶层的 "version"。
+       旧版清单 / 手改残留的条目级 version、download 一律按顶层覆盖，
+       换版本只改那一行即可。文件名自带版本号（溯源-v1.0.3.apk）时尊重文件名。 */
+    var siteVer = String(base.version || '').trim();
+    function applyVersion(f) {
+      if (!f || typeof f !== 'object') return f;
+      if (!siteVer || versionFromFile(f.file || f.name || '')) return f;
+      return Object.assign({}, f, {
+        version: siteVer,
+        download: (base.app || '溯源') + '-v' + siteVer + '.apk'
+      });
+    }
+    if (data) {
+      base = Object.assign({}, base, {
+        apkCandidates: (base.apkCandidates || []).map(applyVersion),
+        files: (base.files || []).map(applyVersion),
+        latest: applyVersion(base.latest)
+      });
+    }
+
     // 候选 = 清单里所有 APK + 约定名 溯源.apk（去重）
     var list = (base.apkCandidates && base.apkCandidates.length)
       ? base.apkCandidates.slice()

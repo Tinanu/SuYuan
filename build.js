@@ -10,8 +10,13 @@
  *   1. 文件名带版本号（溯源-v1.0.3.apk / 溯源_1_1_0.apk）→ 解析出版本号；
  *   2. 不带版本号的文件（约定名 溯源.apk）视为「当前发布版」，与最高版本文件一起候选；
  *   3. 候选里取「文件修改时间」最新的；时间相同（git clone 后都相同）优先约定名；
- *   4. 选中文件的版本号自动成为页面显示版本；无版本号时沿用 SITE.version。
+ *   4. 选中文件的版本号自动成为页面显示版本；无版本号时沿用 releases.json 顶层 version。
  * 因此最省事的做法：把新版 APK 直接覆盖命名为 溯源.apk，或命名成 溯源-v新版本号.apk。
+ *
+ * ★ 版本号【全局唯一来源】：releases.json 顶层的 "version"。
+ *   本脚本会先读取它、生成时原样写回，不再在每个文件条目里重复写 version / download；
+ *   页面运行时也只认这一处，自动派生所有版本显示与「溯源-v版本号.apk」下载文件名。
+ *   换版本时只改那一行即可（不跑本脚本、直接手改 releases.json 也生效）。
  *
  * ★ 重要：GitHub Pages 是纯静态托管，服务器上【不会也不必】运行本脚本 / Node.js。
  *   本脚本只在「上传之前」执行 —— 你自己的电脑，或 GitHub Actions 的构建机；
@@ -33,11 +38,12 @@ const OUT = path.join(ROOT, 'releases.json');
 const GUIDE_SRC = path.join(ROOT, 'wechat.html');
 const GUIDE_PREVIEW = path.join(ROOT, 'guide-preview.html');
 
-// 站点级配置。version 只是「文件名里没有版本号时」的兜底；
-// 只要 APK 命名成 溯源-v1.0.3.apk，版本号会被自动识别并覆盖这里。
+// 站点级配置。★ version 不在这里写：唯一来源是 releases.json 顶层的 "version"。
+// main() 启动时会把清单里的版本读进来；清单不存在时才留空（页面显示「最新版」）。
+// 只要 APK 命名成 溯源-v1.0.3.apk，文件名里的版本号会自动识别并写回清单。
 const SITE = {
   app: '溯源',
-  version: '1.0.2',
+  version: '',
   subtitle: '子午流注 · 素问极简版',
   qq: '1241611627',
   github: '', // 例如 https://github.com/yourname/suyuan ，填了页面才会显示仓库按钮
@@ -88,15 +94,27 @@ function sha256(file) {
   });
 }
 
-// 可选：若 appAPK/ 里同时放了 子午流注.js，则优先读取其中版本信息；否则使用 SITE 配置。
+// ★ 版本号唯一来源：读取现有 releases.json 顶层的 version。
+// 这样用户手改清单后，Actions 重跑本脚本也不会把版本打回旧值。
+function readPreviousVersion() {
+  try {
+    const prev = JSON.parse(fs.readFileSync(OUT, 'utf8'));
+    if (prev && typeof prev.version === 'string' && prev.version.trim()) {
+      SITE.version = prev.version.trim();
+      return;
+    }
+  } catch (e) { /* 清单不存在 / 格式异常：保持空，页面显示「最新版」 */ }
+  console.log('[build] 提示：releases.json 里没有 version，可在顶层 "version" 填一个版本号。');
+}
+
+// 可选：若 appAPK/ 里同时放了 子午流注.js，读取其中的副标题与 QQ。
+// 注意：这里【故意不读】LOCAL_VERSION —— 版本号只认 releases.json 顶层一处。
 function readScriptMeta() {
   const p = path.join(APK_DIR, '子午流注.js');
   if (!fs.existsSync(p)) return;
   const head = fs.readFileSync(p, 'utf8').slice(0, 12000);
-  const version = head.match(/LOCAL_VERSION\s*=\s*["']([^"']+)["']/);
   const name = head.match(/UPDATE_APP_NAME\s*=\s*["']([^"']+)["']/);
   const qq = head.match(/DEV_QQ\s*=\s*["']([^"']+)["']/);
-  if (version) SITE.version = version[1];
   if (name) SITE.subtitle = name[1];
   if (qq) SITE.qq = qq[1];
 }
@@ -157,6 +175,7 @@ function syncGuidePreview() {
 }
 
 async function main() {
+  readPreviousVersion();      // ★ 先读回唯一版本号，再生成，避免把用户改的版本打回旧值
   readScriptMeta();
   syncGuidePreview();
 
@@ -189,13 +208,12 @@ async function main() {
     return a.name.localeCompare(b.name, 'zh');
   });
   const latestEntry = candidates[0] || null;
-  // 文件名带版本号时，页面显示版本也跟着自动变；否则沿用 SITE.version
+  // 文件名带版本号时，页面显示版本也跟着自动变；否则沿用 releases.json 顶层 version
   if (latestEntry && latestEntry.version) SITE.version = latestEntry.version;
 
   const files = [];
   for (const e of entries) {
     const isLatest = !!latestEntry && e.full === latestEntry.full;
-    const ver = e.ext === '.apk' ? (e.version || SITE.version) : '';
     files.push({
       file: e.name,
       title: path.basename(e.name, e.ext),
@@ -204,7 +222,6 @@ async function main() {
       kind: e.meta.kind,
       priority: isLatest ? -1 : e.meta.priority,   // 最新版排第一
       ext: e.ext,
-      version: ver || undefined,
       latest: isLatest || undefined,
       size: e.stat.size,
       sha256: await sha256(e.full),
@@ -212,8 +229,8 @@ async function main() {
       mtime: new Date(e.stat.mtimeMs).toISOString(),
       // 中文文件名做 URL 编码，避免 GitHub Pages 上的路径问题
       url: 'appAPK/' + encodeURIComponent(e.name),
-      // 下载时另存的名字：APK 统一叫「溯源-v版本号.apk」，其它保持原名
-      download: e.meta.kind === 'apk' ? `${SITE.app}-v${ver || SITE.version}.apk` : e.name,
+      // ★ 故意不写 version / download：版本号只在顶层写一次，
+      //   页面运行时自动派生所有版本显示与「溯源-v版本号.apk」下载文件名。
     });
   }
 
@@ -231,18 +248,19 @@ async function main() {
     latest: latest,
     latestUrl: latest ? latest.url : null,
     latestName: latest ? latest.file : null,
-    // 运行时探测用的全部 APK 候选（按「最新优先」顺序）
+    // 运行时探测用的全部 APK 候选（按「最新优先」顺序）。同样不重复写 version / download。
     apkCandidates: apkList.map(f => ({
-      file: f.file, url: f.url, version: f.version || '',
-      size: f.size, mtime: f.mtime, sha256: f.sha256, download: f.download,
+      file: f.file, url: f.url,
+      size: f.size, mtime: f.mtime, sha256: f.sha256,
     })),
     files,
   };
 
   fs.writeFileSync(OUT, JSON.stringify(data, null, 2) + '\n', 'utf8');
-  console.log(`[build] 版本 ${data.version} · ${files.length} 个文件 → releases.json`);
+  console.log(`[build] 版本 ${data.version || '（未设置）'} · ${files.length} 个文件 → releases.json`);
+  console.log(`  · 版本号唯一入口：releases.json 顶层 "version" = ${data.version || '（未设置，页面显示「最新版」）'}`);
   if (latest) {
-    console.log(`  ★ 主下载（自动选中最新版）：${latest.file}  v${latest.version || data.version}  ` +
+    console.log(`  ★ 主下载（自动选中最新版）：${latest.file}  ${data.version ? 'v' + data.version : '最新版'}  ` +
       `${(latest.size / 1024 / 1024).toFixed(2)} MB  ${latest.updated}`);
   }
   files.forEach(f => console.log(`  - ${f.file}  ${(f.size / 1024 / 1024).toFixed(2)} MB  ${f.updated}${f.latest ? '  ← 最新' : ''}`));

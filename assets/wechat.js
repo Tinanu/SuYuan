@@ -66,6 +66,20 @@
     el.textContent = location.host || 'tinanu.github.io';
   });
 
+  // 背景下载页上的版本号：只读 releases.json 顶层 version，不再硬编码在 HTML 里。
+  // 读不到（file:// 本地预览 / 零清单部署）就留空，不影响引导图。
+  (function fillVersion() {
+    var els = $$('.js-ver');
+    if (!els.length || typeof fetch !== 'function') return;
+    fetch('releases.json', { cache: 'no-store' })
+      .then(function (r) { return r.ok ? r.json() : null; })
+      .then(function (d) {
+        var v = d && String(d.version || '').trim();
+        els.forEach(function (el) { el.textContent = v ? 'v' + v : ''; });
+      })
+      .catch(function () {});
+  })();
+
   // iPhone 的微信菜单写作「在 Safari 中打开」，且装不了 APK
   if (/iPhone|iPad|iPod/i.test(navigator.userAgent)) {
     $$('[data-wx-ios]').forEach(function (el) { el.textContent = el.getAttribute('data-wx-ios'); });

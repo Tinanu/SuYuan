@@ -1,10 +1,10 @@
 {
   "app": "溯源",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "subtitle": "子午流注 · 素问极简版",
   "qq": "1241611627",
   "github": "",
-  "generated": "2026-11-15T09:06:15.604Z",
+  "generated": "2026-11-15T09:30:39.774Z",
   "primaryName": "溯源.apk",
   "primaryUrl": "appAPK/%E6%BA%AF%E6%BA%90.apk",
   "latest": {
@@ -15,14 +15,12 @@
     "kind": "apk",
     "priority": -1,
     "ext": ".apk",
-    "version": "1.0.2",
     "latest": true,
     "size": 4364871,
     "sha256": "6b70d16252c85cd377a15fcb35ec3989335a7488bbbc5dd0667ce51d81804999",
     "updated": "2026-11-14",
     "mtime": "2026-11-14T14:08:07.331Z",
-    "url": "appAPK/%E6%BA%AF%E6%BA%90.apk",
-    "download": "溯源-v1.0.2.apk"
+    "url": "appAPK/%E6%BA%AF%E6%BA%90.apk"
   },
   "latestUrl": "appAPK/%E6%BA%AF%E6%BA%90.apk",
   "latestName": "溯源.apk",
@@ -30,11 +28,9 @@
     {
       "file": "溯源.apk",
       "url": "appAPK/%E6%BA%AF%E6%BA%90.apk",
-      "version": "1.0.2",
       "size": 4364871,
       "mtime": "2026-11-14T14:08:07.331Z",
-      "sha256": "6b70d16252c85cd377a15fcb35ec3989335a7488bbbc5dd0667ce51d81804999",
-      "download": "溯源-v1.0.2.apk"
+      "sha256": "6b70d16252c85cd377a15fcb35ec3989335a7488bbbc5dd0667ce51d81804999"
     }
   ],
   "files": [
@@ -46,14 +42,12 @@
       "kind": "apk",
       "priority": -1,
       "ext": ".apk",
-      "version": "1.0.2",
       "latest": true,
       "size": 4364871,
       "sha256": "6b70d16252c85cd377a15fcb35ec3989335a7488bbbc5dd0667ce51d81804999",
       "updated": "2026-11-14",
       "mtime": "2026-11-14T14:08:07.331Z",
-      "url": "appAPK/%E6%BA%AF%E6%BA%90.apk",
-      "download": "溯源-v1.0.2.apk"
+      "url": "appAPK/%E6%BA%AF%E6%BA%90.apk"
     }
   ]
 }
