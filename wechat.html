@@ -19,11 +19,13 @@
 <!-- GUIDE-REDIRECT:START （生成 guide-preview.html 时整段删除） -->
 <script>
 (function () {
+  // 与主页共用 assets/wx-detect.js；万一外链没加载成功，用最小兜底
   function isWechat() {
+    if (typeof window.suyuanIsWechat === 'function') return window.suyuanIsWechat();
     var ua = navigator.userAgent || '';
     if (/MicroMessenger|wxwork|WeChat|weixin|MMWEBIDEA|Micro Messenger/i.test(ua)) return true;
     try { if (window.__wxjs_environment === 'miniprogram') return true; } catch (e) {}
-    try { if (typeof WeixinJSBridge !== 'undefined' && /Mobile|Android|iPhone|iPad/i.test(ua)) return true; } catch (e) {}
+    try { if (typeof WeixinJSBridge !== 'undefined') return true; } catch (e) {}
     return false;
   }
   window.__suyuanIsWechat = isWechat;
@@ -39,6 +41,8 @@
 })();
 </script>
 <!-- GUIDE-REDIRECT:END -->
+<!-- 与主页 / 诊断页共用同一份微信判定规则 -->
+<script src="assets/wx-detect.js?v=20261115r6"></script>
 <link rel="stylesheet" href="assets/wechat.css">
 </head>
 <body>

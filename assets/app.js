@@ -7,23 +7,17 @@
 (function () {
   'use strict';
 
-  // 本地预览 / releases.json 读取失败时的兜底清单，指向真正的安装包。
-  // 真正部署时以 releases.json 为准（版本、大小、校验值由 build.js 自动刷新）。
+  // 兜底只保留「去哪找文件」。版本、大小、日期、SHA-256 一律不手填：
+  // 优先用 build.js 自动生成的 releases.json，其次运行时 HEAD 探测真实文件大小。
   var FALLBACK = {
     app: '溯源',
-    version: '1.0.2',
+    version: '',
     subtitle: '子午流注 · 素问极简版',
     qq: '1241611627',
     github: '',
     primaryName: '溯源.apk',
     primaryUrl: 'appAPK/%E6%BA%AF%E6%BA%90.apk',
-    files: [{
-      file: '溯源.apk', title: '溯源', label: 'Android 安装包',
-      hint: 'Android 7.0+ · 下载后直接安装', kind: 'apk', priority: 0,
-      size: 4364871, sha256: '6b70d16252c85cd377a15fcb35ec3989335a7488bbbc5dd0667ce51d81804999',
-      updated: '2026-11-14', url: 'appAPK/%E6%BA%AF%E6%BA%90.apk',
-      download: '溯源-v1.0.2.apk'
-    }]
+    files: []
   };
 
   var $ = function (s, root) { return (root || document).querySelector(s); };
@@ -34,11 +28,39 @@
     });
   };
   var sizeText = function (n) {
-    if (!n && n !== 0) return '—';
+    if (!n) return '—';                    // 未探测到大小时留空，绝不显示手填数字
     if (n < 1024) return n + ' B';
     if (n < 1024 * 1024) return (n / 1024).toFixed(1) + ' KB';
     return (n / 1024 / 1024).toFixed(2) + ' MB';
   };
+  // 语义化版本比较（与 build.js 同规则）
+  function cmpVersion(a, b) {
+    var pa = String(a || '0').split('.').map(function (x) { return parseInt(x, 10) || 0; });
+    var pb = String(b || '0').split('.').map(function (x) { return parseInt(x, 10) || 0; });
+    for (var i = 0; i < Math.max(pa.length, pb.length); i++) {
+      var d = (pa[i] || 0) - (pb[i] || 0);
+      if (d) return d;
+    }
+    return 0;
+  }
+  function versionFromFile(name) {
+    var m = String(name || '').match(/(?:^|[^0-9])[vV]?(\d+(?:[._-]\d+){0,4})(?:[^0-9]|$)/);
+    return m ? m[1].replace(/[_-]/g, '.') : '';
+  }
+  function dateText(v) {
+    if (!v) return '—';
+    var d = new Date(v);
+    if (isNaN(d.getTime())) return String(v).slice(0, 10);
+    var p = function (n) { return (n < 10 ? '0' : '') + n; };
+    return d.getFullYear() + '-' + p(d.getMonth() + 1) + '-' + p(d.getDate());
+  }
+  function pickNewest(list) {
+    return list.slice().sort(function (a, b) {
+      var c = cmpVersion(b.version || versionFromFile(b.file), a.version || versionFromFile(a.file));
+      if (c) return c;
+      return (Date.parse(b.mtime || b.updated || '') || 0) - (Date.parse(a.mtime || a.updated || '') || 0);
+    })[0] || null;
+  }
   var shortHash = function (h) { return h && h.length > 34 ? h.slice(0, 16) + ' … ' + h.slice(-10) : (h || '—'); };
 
   /* ---------------- Toast ---------------- */
@@ -101,23 +123,25 @@
     var files = (state.files || []).slice().sort(function (a, b) {
       return (a.priority == null ? 9 : a.priority) - (b.priority == null ? 9 : b.priority);
     });
-    var apk = files.filter(function (f) { return f.kind === 'apk'; })[0];
-    var main = apk || files[0];
-    var ver = state.version || '1.0.2';
+    var apks = files.filter(function (f) { return f.kind === 'apk'; });
+    // 主下载永远用「自动选出的最新版」，不写死文件名 / 版本 / 大小
+    var main = state.latest || pickNewest(apks) || files[0];
+    var ver = (main && main.version) || state.version || '';
+    var vlabel = ver ? 'v' + ver : '最新版';
 
     // 站点级信息
-    $('#heroVersion').textContent = 'v' + ver;
-    $('#dlVersion').textContent = 'v' + ver;
-    $$('[data-ver]').forEach(function (el) { el.textContent = ver; });
+    $('#heroVersion').textContent = vlabel;
+    $('#dlVersion').textContent = vlabel;
+    $$('[data-ver]').forEach(function (el) { el.textContent = ver || '—'; });
     var qq = $('#qqBtn'); if (qq && state.qq) qq.textContent = state.qq;
     var gh = $('#githubLink');
     if (state.github) { gh.href = state.github; gh.hidden = false; }
     else { gh.hidden = true; }
 
     if (!main) {
-      $('#dlLabel').textContent = '暂无可下载文件';
-      $('#dlTitle').textContent = '文件准备中';
-      $('#dlHint').textContent = '请把文件放进 appAPK/ 目录并运行 node build.js';
+      $('#dlLabel').textContent = '正在检测安装包';
+      $('#dlTitle').textContent = '自动读取 appAPK/ 目录…';
+      $('#dlHint').textContent = '把 APK 放进 appAPK/ 即可，版本与大小会自动计算';
       $('#dlMainBtn').removeAttribute('href');
       return;
     }
@@ -125,13 +149,14 @@
     var isApk = main.kind === 'apk';
     $('#dlLabel').textContent = main.label || (isApk ? 'Android 安装包' : '本地文件');
     $('#dlTitle').textContent = isApk ? (state.app || '溯源') + ' · Android 安装包' : (main.title || main.file);
-    $('#dlHint').textContent = isApk ? (main.hint || state.subtitle || '') : (main.hint || '本地文件');
+    $('#dlHint').textContent = (isApk ? (main.hint || state.subtitle || '') : (main.hint || '本地文件')) +
+      (main.stale ? ' · 清单未刷新，已隐藏过期校验值' : '');
     $('#dlSize').textContent = sizeText(main.size);
     $('#dlDate').textContent = main.updated || '—';
     $('#dlPlatform').textContent = isApk ? 'Android 7.0+' : '本地文件';
-    $('#dlMainText').textContent = isApk ? ('下载安装包 · v' + ver) : ('下载 ' + main.file);
-    $('#heroBtnText').textContent = isApk ? '下载溯源 v' + ver : '下载文件';
-    $('#heroMeta').textContent = '版本 v' + ver + ' · ' + sizeText(main.size) + ' · ' +
+    $('#dlMainText').textContent = isApk ? ('下载安装包 · ' + vlabel) : ('下载 ' + main.file);
+    $('#heroBtnText').textContent = isApk ? ('下载溯源 ' + vlabel) : '下载文件';
+    $('#heroMeta').textContent = '版本 ' + vlabel + ' · ' + sizeText(main.size) + ' · ' +
       (isApk ? 'Android 7.0+' : '本地文件') + ' · 无网络依赖';
 
     var btn = $('#dlMainBtn');
@@ -141,13 +166,15 @@
 
     var sha = main.sha256 || '';
     $('#dlSha').textContent = sha ? shortHash(sha) : '—';
-    $('#dlSha').title = sha;
+    $('#dlSha').title = sha || (main.stale
+      ? '安装包已更新但清单未刷新，旧的 SHA-256 已作废。本地跑一次 node build.js 可重新生成。'
+      : '未生成校验值');
     $('#copySha').style.display = sha ? '' : 'none';
     $('#copySha').onclick = function () { copyText(sha, 'SHA-256 已复制'); };
 
     $('#dlNotice').classList.toggle('show', !isApk);
 
-    var others = files.filter(function (f) { return f !== main; });
+    var others = files.filter(function (f) { return f.url !== main.url; });
     var box = $('#dlOthers');
     box.innerHTML = others.map(function (f) {
       return '<a href="' + esc(f.url) + '" download="' + esc(f.download || f.file) + '">' +
@@ -159,49 +186,108 @@
     if (rd) rd.textContent = main.updated || (state.generated || '').slice(0, 7) || '';
   }
 
-  // HEAD 探测：即使忘记跑 build.js，只要把 溯源.apk 放进 appAPK/ 也能自动出现
-  function probePrimary(url) {
+  /* ---------------- 自动发现「最新版」APK + 自动算大小 ----------------
+     静态站点无法列目录，所以分两层：
+       ① releases.json（build.js 自动生成）给出全部 APK 候选与自动选中的 latest；
+       ② 运行时对每个候选做 HEAD，确认文件真实存在，并用响应头里的
+          Content-Length / Last-Modified 覆盖大小与日期 —— 即使清单过期也不用手填。
+     因此换包只要放进 appAPK/，下载链接、版本、大小、日期都会自动切过去。 */
+  function probe(url) {
     return new Promise(function (resolve) {
-      var ctrl = new AbortController();
-      var timer = setTimeout(function () { ctrl.abort(); }, 4000);
-      fetch(url, { method: 'HEAD', signal: ctrl.signal }).then(function (r) {
+      var ctrl = null;
+      try { ctrl = new AbortController(); } catch (e) {}
+      var opts = { method: 'HEAD', cache: 'no-store' };
+      if (ctrl) opts.signal = ctrl.signal;
+      var timer = setTimeout(function () { if (ctrl) ctrl.abort(); resolve(null); }, 4000);
+      fetch(url, opts).then(function (r) {
         clearTimeout(timer);
         if (!r.ok) return resolve(null);
-        resolve({ size: Number(r.headers.get('content-length')) || 0, res: r });
+        resolve({
+          size: Number(r.headers.get('content-length')) || 0,
+          lastModified: r.headers.get('last-modified') || ''
+        });
       }).catch(function () { clearTimeout(timer); resolve(null); });
     });
   }
 
+  function apkRecord(f, hit, base) {
+    var file = f.file || f.name || base.primaryName || '溯源.apk';
+    var fromName = versionFromFile(file);
+    // releases.json 是 build.js 留下的静态快照。若线上 APK 的实际大小与清单不一致，
+    // 说明换过包但没刷新清单（也就是「完全不跑 node、直接 push」的部署方式）：
+    // 此时清单里的 SHA-256 与版本号已经过期，必须丢掉，否则用户拿旧哈希校验新包会失败。
+    var stale = !!(hit && hit.size && f.size && Number(hit.size) !== Number(f.size));
+    var version = fromName || (stale ? '' : (f.version || ''));
+    var when = (hit && hit.lastModified) || f.mtime || f.updated || '';
+    return {
+      file: file,
+      title: f.title || base.app || '溯源',
+      label: f.label || 'Android 安装包',
+      hint: f.hint || 'Android 7.0+ · 下载后直接安装',
+      kind: 'apk', priority: -1,
+      version: version,
+      size: (hit && hit.size) || f.size || 0,
+      sha256: stale ? '' : (f.sha256 || ''),
+      stale: stale,
+      updated: dateText(when),
+      mtime: when,
+      url: f.url,
+      download: (f.download && !stale)
+        ? f.download
+        : ((base.app || '溯源') + (version ? '-v' + version : '') + '.apk')
+    };
+  }
+
   async function initRelease() {
-    render(FALLBACK);
+    render(FALLBACK);                         // 先占位，页面不出现任何手填数字
     var data = null;
     try {
       var res = await fetch('releases.json', { cache: 'no-store' });
       if (res.ok) data = await res.json();
-    } catch (e) { /* 本地 file:// 预览会走这里，用兜底清单 */ }
-
+    } catch (e) { /* file:// 本地预览读不到清单，交给下方 HEAD 探测 */ }
     var base = data || FALLBACK;
-    var primaryUrl = base.primaryUrl || FALLBACK.primaryUrl;
-    var hasApk = (base.files || []).some(function (f) { return f.kind === 'apk'; });
 
-    if (!hasApk) {
-      var hit = await probePrimary(primaryUrl);
-      if (hit) {
-        var files = (base.files || []).slice();
-        files.unshift({
-          file: base.primaryName || '溯源.apk',
-          title: base.app || '溯源',
-          label: 'Android 安装包',
-          hint: '下载后直接安装（未运行 build.js，仅显示基础信息）',
-          kind: 'apk', priority: 0,
-          size: hit.size, sha256: '', updated: (hit.res.headers.get('last-modified') || '').slice(0, 16),
-          url: primaryUrl,
-          download: (base.app || '溯源') + '-v' + (base.version || '1.0.2') + '.apk'
-        });
-        base = Object.assign({}, base, { files: files });
-      }
-    }
-    render(base);
+    // 候选 = 清单里所有 APK + 约定名 溯源.apk（去重）
+    var list = (base.apkCandidates && base.apkCandidates.length)
+      ? base.apkCandidates.slice()
+      : (base.files || []).filter(function (f) { return f.kind === 'apk'; }).slice();
+    var primaryUrl = base.primaryUrl || FALLBACK.primaryUrl;
+    var seen = {}, candidates = [];
+    list.forEach(function (f) { if (f.url && !seen[f.url]) { seen[f.url] = 1; candidates.push(f); } });
+    if (!seen[primaryUrl]) candidates.push({ file: base.primaryName || '溯源.apk', url: primaryUrl });
+
+    // 并行 HEAD：确认哪些文件真实存在，并读取真实大小 / 修改时间
+    var found = [];
+    try {
+      var probed = await Promise.all(candidates.map(function (f) {
+        return probe(f.url).then(function (hit) { return hit ? apkRecord(f, hit, base) : null; });
+      }));
+      found = probed.filter(Boolean);
+    } catch (e) { found = []; }
+
+    // 自动挑最新：版本号 → 修改时间 → 清单标记的 latest
+    var latestUrl = base.latestUrl || (base.latest && base.latest.url) || '';
+    found.sort(function (a, b) {
+      var c = cmpVersion(b.version, a.version);
+      if (c) return c;
+      var d = (Date.parse(b.mtime || '') || 0) - (Date.parse(a.mtime || '') || 0);
+      if (d) return d;
+      if (a.url === latestUrl) return -1;
+      if (b.url === latestUrl) return 1;
+      return 0;
+    });
+    var main = found[0];
+    // 探测全失败（如直接双击 file://）时，仍用清单信息给出可点击的下载链接
+    if (!main && candidates.length) main = apkRecord(candidates[0], null, base);
+
+    render(Object.assign({}, base, {
+      // 清单过期时连站点级版本号也一起作废，避免显示旧版本 / 旧哈希误导用户
+      version: (main && main.stale) ? '' : ((main && main.version) || base.version || ''),
+      latest: main || null,
+      files: main
+        ? [main].concat((base.files || []).filter(function (f) { return f.url !== main.url; }))
+        : (base.files || [])
+    }));
   }
 
   /* ---------------- 十二时辰流注环 ---------------- */
@@ -314,24 +400,60 @@
   buildWheel();
   initRelease();
 
-  /* ---------------- 微信跳转第三道保险 ----------------
-     head 与 <body> 开头的跳转都没生效时，DOM 就绪再试一次；
-     若仍停留在下载页且确实是微信，就插一条醒目的手动入口，保证不会「没反应」。
-     引导页加载的是 wechat.js，不会执行这里。 */
-  document.addEventListener('DOMContentLoaded', function () {
+  /* ---------------- 微信引导：多层兜底 ----------------
+     有的手机微信 WebView 首帧脚本没跑 / 被拦 / 缓存了旧代码，就会「不出引导页」。
+     除 head 与 <body> 开头两道外，这里再补四道：
+       · DOM 就绪复检，仍没跳成就插一条醒目的手动入口
+       · 点「下载」或任何 APK 链接时再判一次（微信常直接吞掉下载请求）
+       · pageshow / load / 页面重新可见时各复检一次
+     判定统一走 assets/wx-detect.js，避免多处规则不一致。 */
+  function wxIsWechat() {
+    if (typeof window.suyuanIsWechat === 'function') return window.suyuanIsWechat();
+    return !!(window.__suyuanIsWechat && window.__suyuanIsWechat());
+  }
+  function wxGoGuide() {
+    try { location.replace('wechat.html'); }
+    catch (e) { location.href = 'wechat.html'; }
+  }
+  function wxEnsureGuide() {
     try {
-      var jumped = window.__suyuanGoWechat && window.__suyuanGoWechat();
-      if (jumped) return;
-      var off = /[?&]nowx=1(?:&|$)/.test(location.search);
-      if (off || !(window.__suyuanIsWechat && window.__suyuanIsWechat())) return;
-      if (document.getElementById('wxFallbackBar')) return;
-      var bar = document.createElement('a');
-      bar.id = 'wxFallbackBar';
-      bar.href = 'wechat.html';
-      bar.textContent = '检测到微信内置浏览器：点这里查看「在浏览器中打开」图文指引 →';
-      bar.style.cssText = 'display:block;position:sticky;top:0;z-index:9998;padding:12px 14px;' +
-        'background:#B24A3B;color:#fff;font-size:14px;font-weight:600;text-align:center;text-decoration:none';
-      document.body.insertBefore(bar, document.body.firstChild);
-    } catch (e) {}
+      if (window.__suyuanWxOff) return false;                  // 用户主动选过「仍要继续浏览」
+      if (window.__suyuanGoWechat && window.__suyuanGoWechat()) return true;
+      if (!wxIsWechat()) return false;
+      wxGoGuide();
+      return true;
+    } catch (e) { return false; }
+  }
+
+  document.addEventListener('DOMContentLoaded', function () {
+    if (wxEnsureGuide()) return;
+    if (!wxIsWechat() || document.getElementById('wxFallbackBar')) return;
+    var bar = document.createElement('a');
+    bar.id = 'wxFallbackBar';
+    bar.href = 'wechat.html';
+    bar.textContent = '微信里下载没反应？点这里看「在浏览器中打开」图文指引 →';
+    bar.style.cssText = 'display:block;position:sticky;top:0;z-index:9998;padding:12px 14px;' +
+      'background:#B24A3B;color:#fff;font-size:14px;font-weight:600;text-align:center;text-decoration:none';
+    document.body.insertBefore(bar, document.body.firstChild);
+  });
+
+  // 点下载时才暴露问题（首帧没跳成功）的手机，在这一步拦下来
+  document.addEventListener('click', function (e) {
+    try {
+      if (!wxIsWechat() || window.__suyuanWxOff || e.defaultPrevented) return;
+      var a = e.target && e.target.closest ? e.target.closest('a') : null;
+      if (!a) return;
+      var href = a.getAttribute('href') || '';
+      if (a.id !== 'dlMainBtn' && href.indexOf('appAPK/') < 0 && !/\.apk(\?|$)/i.test(href)) return;
+      e.preventDefault();
+      wxGoGuide();
+    } catch (err) {}
+  }, true);
+
+  ['pageshow', 'load'].forEach(function (ev) {
+    window.addEventListener(ev, function () { wxEnsureGuide(); });
+  });
+  document.addEventListener('visibilitychange', function () {
+    if (!document.hidden) wxEnsureGuide();
   });
 })();

@@ -2,13 +2,25 @@
 /**
  * 溯源 · 下载页清单生成器
  *
- * 用法：把要提供下载的文件（溯源.apk / 脚本 / 压缩包…）放进 appAPK/ 目录，
- *       然后在项目根目录执行一次：  node build.js
- *       页面会读取生成的 releases.json 自动更新下载区（版本、大小、时间、SHA-256）；
+ * 用法：把新版 APK 放进 appAPK/ 目录，然后 push（或手动跑 node build.js）。
+ *       脚本会【自动挑出最新版 APK】作为主下载，同步刷新版本、大小、时间、SHA-256；
  *       同时从 wechat.html 同步生成独立静态预览页 guide-preview.html。
  *
- * 部署到 GitHub Pages 前记得先跑一次；以后每次换安装包、或改完微信引导也要跑一次。
- * 不跑也能用：页面会尝试直接探测 appAPK/溯源.apk，并把 子午流注.js 作为备用下载。
+ * 自动挑最新的规则（改引导 / 换包后无需手改任何下载链接）：
+ *   1. 文件名带版本号（溯源-v1.0.3.apk / 溯源_1_1_0.apk）→ 解析出版本号；
+ *   2. 不带版本号的文件（约定名 溯源.apk）视为「当前发布版」，与最高版本文件一起候选；
+ *   3. 候选里取「文件修改时间」最新的；时间相同（git clone 后都相同）优先约定名；
+ *   4. 选中文件的版本号自动成为页面显示版本；无版本号时沿用 SITE.version。
+ * 因此最省事的做法：把新版 APK 直接覆盖命名为 溯源.apk，或命名成 溯源-v新版本号.apk。
+ *
+ * ★ 重要：GitHub Pages 是纯静态托管，服务器上【不会也不必】运行本脚本 / Node.js。
+ *   本脚本只在「上传之前」执行 —— 你自己的电脑，或 GitHub Actions 的构建机；
+ *   生成的 releases.json 与 guide-preview.html 都是静态文件，push 上去即可。
+ *   完全不用 Node 也能部署：把新版 APK 覆盖成 appAPK/溯源.apk 直接 push，
+ *   页面会 HEAD 探测真实大小与日期；此时清单里的 SHA-256 会自动隐藏（避免过期误导）。
+ *
+ * 想省掉手动执行，可启用 .github/workflows/refresh-releases.yml：
+ * 只要 push 了 appAPK/ 里的新包，Actions 会自动跑本脚本并提交清单。
  */
 
 const fs = require('fs');
@@ -21,7 +33,8 @@ const OUT = path.join(ROOT, 'releases.json');
 const GUIDE_SRC = path.join(ROOT, 'wechat.html');
 const GUIDE_PREVIEW = path.join(ROOT, 'guide-preview.html');
 
-// 站点级配置。发新版时改这里的 version（与 App 内 config.js 的 LOCAL_VERSION 保持一致）。
+// 站点级配置。version 只是「文件名里没有版本号时」的兜底；
+// 只要 APK 命名成 溯源-v1.0.3.apk，版本号会被自动识别并覆盖这里。
 const SITE = {
   app: '溯源',
   version: '1.0.2',
@@ -46,6 +59,24 @@ const dateOf = ms => {
   const d = new Date(ms);
   return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
 };
+
+/* ---------------- 自动识别「最新版」APK ---------------- */
+// 从文件名里抓版本号：溯源-v1.0.3.apk → 1.0.3；溯源_1_1_0.apk → 1.1.0；溯源.apk → ''
+function versionOf(fileName) {
+  const base = path.basename(fileName, path.extname(fileName));
+  const m = base.match(/(?:^|[^0-9])[vV]?(\d+(?:[._-]\d+){0,4})(?:[^0-9]|$)/);
+  return m ? m[1].replace(/[_-]/g, '.') : '';
+}
+// 语义化版本比较：a > b 返回正数
+function cmpVersion(a, b) {
+  const pa = String(a || '0').split('.').map(x => parseInt(x, 10) || 0);
+  const pb = String(b || '0').split('.').map(x => parseInt(x, 10) || 0);
+  for (let i = 0; i < Math.max(pa.length, pb.length); i++) {
+    const d = (pa[i] || 0) - (pb[i] || 0);
+    if (d) return d;
+  }
+  return 0;
+}
 
 function sha256(file) {
   return new Promise((resolve, reject) => {
@@ -85,13 +116,13 @@ const MARK_END = '<!-- GUIDE-REDIRECT:END -->';
 const PREVIEW_HEAD = `
 <meta name="robots" content="noindex, nofollow">
 <style>
-  .gp-bar { display: flex; align-items: center; flex-wrap: wrap; gap: 10px;
+  .gp-bar { display: grid; grid-template-columns: 1fr auto; align-items: center; gap: 6px 14px;
     width: min(100%, 540px); margin: 44px 0 18px; padding: 11px 14px;
     border: 1px solid #C6DBD6; border-radius: 12px; background: #E4F0ED;
     font-size: 12px; line-height: 1.65; color: #2A5A54; text-align: left; }
-  .gp-bar b { flex: none; font-size: 13px; color: #1E3330; }
-  .gp-bar span { flex: 1 1 240px; min-width: 0; }
-  .gp-bar a { flex: none; color: #1E6B5A; font-weight: 600; text-decoration: underline; text-underline-offset: 3px; }
+  .gp-bar b { grid-column: 1; grid-row: 1; font-size: 13px; color: #1E3330; }
+  .gp-bar a { grid-column: 2; grid-row: 1; white-space: nowrap; color: #1E6B5A; font-weight: 600; text-decoration: underline; text-underline-offset: 3px; }
+  .gp-bar span { grid-column: 1 / -1; grid-row: 2; min-width: 0; }
   .gp-bar code { font-size: 11px; }
   .wx-preview-bar { display: none !important; } /* 由上面的横幅代替 */
 </style>
@@ -131,50 +162,91 @@ async function main() {
 
   if (!fs.existsSync(APK_DIR)) fs.mkdirSync(APK_DIR, { recursive: true });
 
-  const names = fs.readdirSync(APK_DIR).filter(n => {
+  const entries = fs.readdirSync(APK_DIR).filter(n => {
     if (n.startsWith('.')) return false;             // .gitkeep / 隐藏文件
     return fs.statSync(path.join(APK_DIR, n)).isFile();
+  }).map(name => {
+    const full = path.join(APK_DIR, name);
+    const ext = path.extname(name).toLowerCase();
+    return {
+      name, full, ext,
+      stat: fs.statSync(full),
+      meta: TYPES[ext] || { kind: 'other', label: '文件', hint: '本地文件', priority: 9 },
+    };
   });
 
+  /* ---- 自动挑最新版 APK ---- */
+  const apks = entries.filter(e => e.ext === '.apk');
+  apks.forEach(e => { e.version = versionOf(e.name); });
+  let maxVersion = '';
+  apks.forEach(e => { if (e.version && cmpVersion(e.version, maxVersion) > 0) maxVersion = e.version; });
+  // 候选 = 无版本号的约定名（当前发布版） + 版本号最高的那批
+  const candidates = apks.filter(e => !e.version || (maxVersion && cmpVersion(e.version, maxVersion) === 0));
+  candidates.sort((a, b) => {
+    const d = b.stat.mtimeMs - a.stat.mtimeMs;
+    if (Math.abs(d) > 1000) return d;                       // 修改时间相差明显：新的在前
+    if (!a.version !== !b.version) return a.version ? 1 : -1; // 时间相同：优先约定名
+    return a.name.localeCompare(b.name, 'zh');
+  });
+  const latestEntry = candidates[0] || null;
+  // 文件名带版本号时，页面显示版本也跟着自动变；否则沿用 SITE.version
+  if (latestEntry && latestEntry.version) SITE.version = latestEntry.version;
+
   const files = [];
-  for (const name of names) {
-    const full = path.join(APK_DIR, name);
-    const stat = fs.statSync(full);
-    const ext = path.extname(name).toLowerCase();
-    const meta = TYPES[ext] || { kind: 'other', label: '文件', hint: '本地文件', priority: 9 };
+  for (const e of entries) {
+    const isLatest = !!latestEntry && e.full === latestEntry.full;
+    const ver = e.ext === '.apk' ? (e.version || SITE.version) : '';
     files.push({
-      file: name,
-      title: path.basename(name, ext),
-      label: meta.label,
-      hint: meta.hint,
-      kind: meta.kind,
-      priority: meta.priority,
-      ext,
-      size: stat.size,
-      sha256: await sha256(full),
-      updated: dateOf(stat.mtimeMs),
+      file: e.name,
+      title: path.basename(e.name, e.ext),
+      label: e.meta.label,
+      hint: e.meta.hint,
+      kind: e.meta.kind,
+      priority: isLatest ? -1 : e.meta.priority,   // 最新版排第一
+      ext: e.ext,
+      version: ver || undefined,
+      latest: isLatest || undefined,
+      size: e.stat.size,
+      sha256: await sha256(e.full),
+      updated: dateOf(e.stat.mtimeMs),
+      mtime: new Date(e.stat.mtimeMs).toISOString(),
       // 中文文件名做 URL 编码，避免 GitHub Pages 上的路径问题
-      url: 'appAPK/' + encodeURIComponent(name),
+      url: 'appAPK/' + encodeURIComponent(e.name),
       // 下载时另存的名字：APK 统一叫「溯源-v版本号.apk」，其它保持原名
-      download: meta.kind === 'apk' ? `${SITE.app}-v${SITE.version}.apk` : name,
+      download: e.meta.kind === 'apk' ? `${SITE.app}-v${ver || SITE.version}.apk` : e.name,
     });
   }
 
   files.sort((a, b) => a.priority - b.priority || a.file.localeCompare(b.file, 'zh'));
 
+  const latest = files.find(f => f.latest) || null;
+  const apkList = files.filter(f => f.kind === 'apk');
   const data = {
     ...SITE,
     generated: new Date().toISOString(),
     // 约定俗成的主安装包名：即使没跑本脚本，页面也会探测它
     primaryName: `${SITE.app}.apk`,
     primaryUrl: 'appAPK/' + encodeURIComponent(`${SITE.app}.apk`),
+    // 自动选中的最新版：页面优先把它作为下载链接
+    latest: latest,
+    latestUrl: latest ? latest.url : null,
+    latestName: latest ? latest.file : null,
+    // 运行时探测用的全部 APK 候选（按「最新优先」顺序）
+    apkCandidates: apkList.map(f => ({
+      file: f.file, url: f.url, version: f.version || '',
+      size: f.size, mtime: f.mtime, sha256: f.sha256, download: f.download,
+    })),
     files,
   };
 
   fs.writeFileSync(OUT, JSON.stringify(data, null, 2) + '\n', 'utf8');
   console.log(`[build] 版本 ${data.version} · ${files.length} 个文件 → releases.json`);
-  files.forEach(f => console.log(`  - ${f.file}  ${(f.size / 1024 / 1024).toFixed(2)} MB  ${f.updated}`));
-  if (!files.some(f => f.kind === 'apk')) {
+  if (latest) {
+    console.log(`  ★ 主下载（自动选中最新版）：${latest.file}  v${latest.version || data.version}  ` +
+      `${(latest.size / 1024 / 1024).toFixed(2)} MB  ${latest.updated}`);
+  }
+  files.forEach(f => console.log(`  - ${f.file}  ${(f.size / 1024 / 1024).toFixed(2)} MB  ${f.updated}${f.latest ? '  ← 最新' : ''}`));
+  if (!apkList.length) {
     console.log(`[build] 提示：appAPK/ 里还没有 APK。把安装包命名为「${SITE.app}.apk」放进去再跑一次即可。`);
   }
 }

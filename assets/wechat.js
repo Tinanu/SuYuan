@@ -5,11 +5,13 @@
   var $ = function (s) { return document.querySelector(s); };
   var $$ = function (s) { return Array.prototype.slice.call(document.querySelectorAll(s)); };
 
+  // 与主页共用同一份判定规则（assets/wx-detect.js），预览页也会加载它
   function isWechat() {
+    if (typeof window.suyuanIsWechat === 'function') return window.suyuanIsWechat();
     var ua = navigator.userAgent || '';
     if (/MicroMessenger|wxwork|WeChat|weixin|MMWEBIDEA|Micro Messenger/i.test(ua)) return true;
     try { if (window.__wxjs_environment === 'miniprogram') return true; } catch (e) {}
-    try { if (typeof WeixinJSBridge !== 'undefined' && /Mobile|Android|iPhone|iPad/i.test(ua)) return true; } catch (e) {}
+    try { if (typeof WeixinJSBridge !== 'undefined') return true; } catch (e) {}
     return false;
   }
 

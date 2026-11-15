@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>微信跳转自检 · 溯源</title>
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <style>
   * { box-sizing: border-box; }
   body { margin: 0; padding: 20px 16px 40px; background: #F1F6F5; color: #1E3330;
@@ -28,39 +29,43 @@
   .build { display: inline-block; background: #3E7C74; color: #fff; border-radius: 6px;
            padding: 2px 8px; font-size: 12px; letter-spacing: .5px; }
 </style>
+<script src="assets/wx-detect.js?v=20261115r6"></script>
 </head>
 <body>
 <div class="wrap">
   <h1>微信跳转自检</h1>
-  <p class="lead">在微信里打开本页，把下面内容截图发回，就能判断是「代码没更新」还是「UA 没识别」。</p>
+  <p class="lead">在「不出引导页」的那台手机微信里打开本页，点「复制诊断信息」发回，就能判断是缓存旧代码、UA 没识别，还是链接带了开关参数。</p>
 
   <div class="card">
-    <div class="row"><div class="k">页面版本</div><div class="v"><span class="build" id="dBuild">BUILD 2026-11-15-r4</span> <span id="dBuildHint"></span></div></div>
+    <div class="row"><div class="k">页面版本</div><div class="v"><span class="build" id="dBuild">BUILD 2026-11-15-r6</span> <span id="dBuildHint"></span></div></div>
     <div class="row"><div class="k">当前网址</div><div class="v" id="dUrl">—</div></div>
     <div class="row"><div class="k">完整 UA</div><div class="v" id="dUa">—</div></div>
+    <div class="row"><div class="k">判定脚本</div><div class="v" id="dScript">—</div></div>
   </div>
 
   <div class="card">
+    <div class="row"><div class="k">命中信号</div><div class="v" id="dSignals">—</div></div>
     <div class="row"><div class="k">MicroMessenger</div><div class="v" id="dMm">—</div></div>
-    <div class="row"><div class="k">wxwork / 其它关键字</div><div class="v" id="dOther">—</div></div>
+    <div class="row"><div class="k">其它 UA 关键字</div><div class="v" id="dOther">—</div></div>
     <div class="row"><div class="k">小程序环境</div><div class="v" id="dMini">—</div></div>
     <div class="row"><div class="k">WeixinJSBridge</div><div class="v" id="dBridge">—</div></div>
     <div class="row"><div class="k">综合判定</div><div class="v" id="dFinal">—</div></div>
     <div class="row"><div class="k">预期动作</div><div class="v" id="dExpect">—</div></div>
+    <div class="row"><div class="k">继续浏览开关</div><div class="v" id="dOff">—</div></div>
     <div class="row"><div class="k">旧跳过标记</div><div class="v" id="dSkip">—</div></div>
   </div>
 
   <div class="card">
-    <div class="row"><div class="k">跳转规则</div><div class="v">微信内打开 <code>index.html</code> → 跳 <code>wechat.html</code>（无参数）；<b>非微信 UA 打开 <code>wechat.html</code>，无论带什么参数，一律回 <code>index.html</code></b>。看引导图请用独立静态预览页 <code>guide-preview.html</code>，它不含跳转、不吃参数。</div></div>
+    <div class="row"><div class="k">跳转规则</div><div class="v">判定统一走 <code>assets/wx-detect.js</code>。微信内打开 <code>index.html</code> → 跳 <code>wechat.html</code>（无参数）；另有 DOM 就绪、点击下载、pageshow、页面重新可见四次复检。<b>非微信 UA 打开 <code>wechat.html</code>，无论带什么参数，一律回 <code>index.html</code></b>。<code>?nowx=1</code> 只在本次页面生效且会立刻从地址栏抹掉。看引导图请用 <code>guide-preview.html</code>（不含跳转、不吃参数）。</div></div>
   </div>
 
-  <div class="tip" id="dTip">如果这个页面打不开（404），或版本号不是 r4，说明线上还是旧代码 / 微信缓存。把仓库重新推送后，给网址加个随机参数再打开，例如 <code>?t=1123</code>，可绕过缓存。</div>
+  <div class="tip" id="dTip">若版本号不是 r6、或「判定脚本」显示未加载，说明线上还是旧代码 / 微信缓存。重新推送后给网址加个随机参数再打开，例如 <code>?t=1123</code>，可绕过缓存。</div>
 
   <div class="btns">
-    <a class="btn" href="guide-preview.html">打开引导图静态预览</a>
-    <a class="btn plain" href="wechat.html">打开线上引导页（外部浏览器会回主页）</a>
+    <button class="btn" type="button" id="dCopy">复制诊断信息</button>
+    <a class="btn plain" href="guide-preview.html">打开引导图静态预览</a>
+    <a class="btn plain" href="wechat.html">打开线上引导页</a>
     <a class="btn plain" href="index.html?nowx=1">打开下载页</a>
-    <button class="btn plain" type="button" id="dClear">清除旧标记并刷新</button>
   </div>
 </div>
 
@@ -68,11 +73,21 @@
 (function () {
   var ua = navigator.userAgent || '';
   var mm = /MicroMessenger/i.test(ua);
-  var other = /wxwork|WeChat|weixin|MMWEBIDEA|Micro Messenger/i.test(ua);
+  var other = /wxwork|WeChat|weixin|MMWEBIDEA|Micro Messenger|WechatDevTools|miniprogram/i.test(ua);
   var mini = false, bridge = false;
   try { mini = window.__wxjs_environment === 'miniprogram'; } catch (e) {}
-  try { bridge = typeof WeixinJSBridge !== 'undefined' && /Mobile|Android|iPhone|iPad/i.test(ua); } catch (e) {}
-  var yes = mm || other || mini || bridge;
+  try { bridge = typeof WeixinJSBridge !== 'undefined'; } catch (e) {}
+
+  var shared = typeof window.suyuanWechatSignals === 'function';
+  var signals = shared ? window.suyuanWechatSignals() : [];
+  if (!shared) {                       // 外链没加载成功时，用本地最小规则补一份
+    if (mm) signals.push('UA:micromessenger');
+    if (other) signals.push('UA:other');
+    if (mini) signals.push('env:miniprogram');
+    if (bridge) signals.push('WeixinJSBridge');
+  }
+  var yes = shared ? (typeof window.suyuanIsWechat === 'function' ? window.suyuanIsWechat() : signals.length > 0)
+                   : (mm || other || mini || bridge);
 
   function put(id, text, ok) {
     var el = document.getElementById(id);
@@ -85,6 +100,8 @@
 
   put('dUrl', location.href);
   put('dUa', ua || '(空)');
+  put('dScript', shared ? 'wx-detect.js 已加载（统一规则）' : '未加载！使用页面内兜底规则，说明资源被缓存或 404', shared);
+  put('dSignals', signals.length ? signals.join('、') : '(无任何微信信号)', signals.length > 0);
   put('dMm', yn(mm), mm);
   put('dOther', yn(other), other);
   put('dMini', yn(mini), mini);
@@ -92,22 +109,45 @@
   put('dFinal', yes ? '判定为微信环境 → 应跳到 wechat.html' : '判定为普通浏览器 → 应留在下载页 / 打开引导页会回下载页', yes);
 
   var q = location.search;
+  var off = /[?&]nowx=1(?:&|$)/.test(q);
   var expect;
-  if (/[?&]nowx=1(?:&|$)/.test(q)) expect = 'nowx=1：强制留在下载页';
+  if (off) expect = 'nowx=1：本次页面留在下载页，地址栏参数会被立即抹掉';
   else if (yes) expect = '微信环境：跳到 wechat.html（无参数）';
   else expect = '普通浏览器：留在下载页；若打开 wechat.html 会自动回下载页';
   put('dExpect', expect);
+  put('dOff', off ? '本次已开启（不会被分享出去）' : '未开启');
 
   var skip = '(无)';
   try { skip = sessionStorage.getItem('suyuan-wx-skip') || '(无)'; } catch (e) { skip = '(不可读)'; }
   put('dSkip', skip + '　（新版已不再使用此标记）');
 
   var ver = document.getElementById('dBuild').textContent;
-  put('dBuildHint', /r4$/.test(ver) ? '· 已是最新版' : '· 版本偏旧');
+  put('dBuildHint', /r6$/.test(ver) ? '· 已是最新版' : '· 版本偏旧');
 
-  document.getElementById('dClear').addEventListener('click', function () {
-    try { sessionStorage.removeItem('suyuan-wx-skip'); } catch (e) {}
-    location.replace('diag.html?t=' + Date.now());
+  document.getElementById('dCopy').addEventListener('click', function () {
+    var lines = [
+      '页面版本：' + ver,
+      '网址：' + location.href,
+      'UA：' + (ua || '(空)'),
+      '判定脚本：' + (shared ? '已加载' : '未加载'),
+      '命中信号：' + (signals.length ? signals.join('、') : '(无)'),
+      '综合判定：' + (yes ? '微信环境' : '普通浏览器'),
+      '预期动作：' + expect,
+      '继续浏览开关：' + (off ? '开启' : '未开启')
+    ];
+    var text = lines.join('\n');
+    var btn = document.getElementById('dCopy');
+    var ok = function () { btn.textContent = '已复制 ✓'; setTimeout(function () { btn.textContent = '复制诊断信息'; }, 2000); };
+    var fallback = function () {
+      var ta = document.createElement('textarea');
+      ta.value = text; ta.style.cssText = 'position:fixed;top:0;left:-9999px;opacity:0';
+      document.body.appendChild(ta); ta.select();
+      try { document.execCommand('copy'); ok(); } catch (e) { btn.textContent = '复制失败，请截图本页'; }
+      document.body.removeChild(ta);
+    };
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(text).then(ok, fallback);
+    } else { fallback(); }
   });
 })();
 </script>

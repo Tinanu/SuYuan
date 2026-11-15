@@ -6,6 +6,10 @@
 <title>溯源 · 子午流注学习台 ｜ 官方下载</title>
 <meta name="description" content="溯源（子午流注 · 素问极简版）官方下载页。十二时辰经络流注、纳甲开穴、二十八脉、18 类练习模块，完全离线可用。">
 <meta name="theme-color" content="#F1F6F5">
+<!-- 微信 WebView 缓存很顽固：旧版 index.html 被缓存住，就会「有的手机跳、有的不跳」 -->
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<meta http-equiv="Pragma" content="no-cache">
+<meta http-equiv="Expires" content="0">
 <link rel="icon" href="assets/favicon.ico" sizes="any">
 <link rel="icon" href="assets/favicon.png" type="image/png">
 <link rel="apple-touch-icon" href="assets/favicon.png">
@@ -21,30 +25,49 @@
   } catch (e) {}
 })();
 
-/* 微信内置浏览器：首帧直接跳到独立引导页 wechat.html，避免先闪一下下载页。
-   三重保险：head 本段 → <body> 开头 → app.js 末尾，任一生效即可（防缓存 / 防脚本被拦）。
-   ?nowx=1 强制留在下载页（点过「仍要继续浏览」也是这个参数）。
-   引导页的回跳只看 UA、不看参数；想看引导图请打开独立静态预览页 guide-preview.html。
-   注意：不再读取 sessionStorage 跳过标记，避免微信里点过一次就再也不跳。 */
-function suyuanIsWechat() {
-  var ua = navigator.userAgent || '';
-  if (/MicroMessenger|wxwork|WeChat|weixin|MMWEBIDEA|Micro Messenger/i.test(ua)) return true;
-  try { if (window.__wxjs_environment === 'miniprogram') return true; } catch (e) {}
-  try { if (typeof WeixinJSBridge !== 'undefined' && /Mobile|Android|iPhone|iPad/i.test(ua)) return true; } catch (e) {}
-  return false;
-}
-window.__suyuanIsWechat = suyuanIsWechat;
-window.__suyuanGoWechat = function () {
-  try {
-    if (/[?&]nowx=1(?:&|$)/.test(location.search)) return false;
-    if (/wechat\.html(?:\?|$)/.test(location.pathname)) return false;
-    if (!suyuanIsWechat()) return false;
-    // 无参数跳转：外部浏览器打开 wechat.html 时会按 UA 直接回本页，不会卡在引导页。
-    location.replace('wechat.html');
-    return true;
-  } catch (e) { return false; }
-};
-window.__suyuanGoWechat();
+<!-- 微信内置浏览器：首帧跳到独立引导页 wechat.html。
+     多重保险：head 本段 → <body> 开头 → app.js（DOM 就绪 / 点下载 / pageshow / 可见性）。
+     判定规则统一放在 assets/wx-detect.js，不再各写一份。
+
+     ★ 关键修复：「仍要继续浏览」的开关只放在内存里，并立刻把 ?nowx=1 从地址栏抹掉。
+       以前这个带参数的链接被复制 / 分享出去，收到的人微信里就永远不跳引导页
+       —— 这正是「有的手机出引导页、有的不出」最常见的原因。
+     ★ 引导页回跳只看 UA、不看参数；想看引导图请打开 guide-preview.html。 -->
+<script src="assets/wx-detect.js?v=20261115r6"></script>
+<script>
+(function () {
+  window.__suyuanWxOff = /[?&]nowx=1(?:&|$)/.test(location.search);
+  if (window.__suyuanWxOff) {
+    try {
+      var q = location.search.split(/[?&]/).filter(function (kv) {
+        return kv && !/^nowx=1$/.test(kv);
+      }).join('&');
+      history.replaceState(null, '', location.pathname + (q ? '?' + q : '') + location.hash);
+    } catch (e) {}
+  }
+
+  function isWechat() {
+    if (typeof window.suyuanIsWechat === 'function') return window.suyuanIsWechat();
+    var ua = navigator.userAgent || '';   // 共享脚本万一没加载成功时的最小兜底
+    if (/MicroMessenger|wxwork|WeChat|weixin|MMWEBIDEA|Micro Messenger/i.test(ua)) return true;
+    try { if (window.__wxjs_environment === 'miniprogram') return true; } catch (e) {}
+    try { if (typeof WeixinJSBridge !== 'undefined') return true; } catch (e) {}
+    return false;
+  }
+  window.__suyuanIsWechat = isWechat;
+  window.__suyuanGoWechat = function () {
+    try {
+      if (window.__suyuanWxOff) return false;
+      if (/wechat\.html(?:\?|$)/.test(location.pathname)) return false;
+      if (!isWechat()) return false;
+      // 无参数跳转：外部浏览器打开 wechat.html 时会按 UA 直接回本页
+      try { location.replace('wechat.html'); }
+      catch (e) { location.href = 'wechat.html'; }
+      return true;
+    } catch (e) { return false; }
+  };
+  window.__suyuanGoWechat();
+})();
 </script>
 <link rel="stylesheet" href="assets/style.css">
 </head>
@@ -97,7 +120,7 @@ window.__suyuanGoWechat();
     <div class="hero-orbit" aria-hidden="true"><span></span><span></span><span></span></div>
     <div class="wrap hero-inner">
       <div class="hero-copy reveal">
-        <div class="eyebrow"><i></i> 循经按时 · 溯源而学 <span class="eyebrow-ver" id="heroVersion">v1.0.2</span></div>
+        <div class="eyebrow"><i></i> 循经按时 · 溯源而学 <span class="eyebrow-ver" id="heroVersion">—</span></div>
         <h1>溯<span>源</span></h1>
         <p class="hero-sub">把十二时辰、经络流注与二十八脉，<br>收进一方安静的学习台。</p>
         <p class="hero-quote">肺寅大卯胃辰宫，脾巳心午小未中，<br>申膀酉肾心包戌，亥焦子胆丑肝通。</p>
@@ -109,11 +132,11 @@ window.__suyuanGoWechat();
         <div class="hero-cta">
           <a class="btn btn-primary btn-lg" href="#download">
             <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v12m0 0 4-4m-4 4-4-4M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2"/></svg>
-            <span id="heroBtnText">下载溯源 v1.0.2</span>
+            <span id="heroBtnText">下载溯源</span>
           </a>
           <a class="btn btn-outline btn-lg" href="#features">了解功能</a>
         </div>
-        <p class="hero-meta" id="heroMeta">版本 v1.0.2 · 4.16 MB · Android 7.0+ · 无网络依赖</p>
+        <p class="hero-meta" id="heroMeta">版本与大小自动读取 · Android 7.0+ · 无网络依赖</p>
       </div>
 
       <div class="hero-visual reveal" aria-label="应用界面示意">
@@ -286,25 +309,25 @@ window.__suyuanGoWechat();
               <h3 id="dlTitle">溯源 · Android 安装包</h3>
               <p id="dlHint">Android 7.0+ · 下载后直接安装</p>
             </div>
-            <span class="version-chip" id="dlVersion">v1.0.2</span>
+            <span class="version-chip" id="dlVersion">读取中</span>
           </div>
 
           <div class="download-meta" id="dlMeta">
-            <div><span>文件大小</span><b id="dlSize">4.16 MB</b></div>
-            <div><span>更新日期</span><b id="dlDate">2026-11-14</b></div>
+            <div><span>文件大小</span><b id="dlSize">—</b></div>
+            <div><span>更新日期</span><b id="dlDate">—</b></div>
             <div><span>运行平台</span><b id="dlPlatform">Android 7.0+</b></div>
           </div>
 
-          <a class="btn btn-primary btn-lg btn-block" id="dlMainBtn" href="appAPK/%E6%BA%AF%E6%BA%90.apk" download="溯源-v1.0.2.apk">
+          <a class="btn btn-primary btn-lg btn-block" id="dlMainBtn" href="appAPK/%E6%BA%AF%E6%BA%90.apk" download="溯源.apk">
             <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v12m0 0 4-4m-4 4-4-4M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2"/></svg>
-            <span id="dlMainText">下载安装包 · v1.0.2</span>
+            <span id="dlMainText">读取安装包…</span>
           </a>
 
-          <p class="wx-entry">在微信里打开没跳转？<a href="wechat.html">看「请在浏览器中打开」图文指引</a></p>
+          <p class="wx-entry">微信里没自动出现引导页，或点下载没反应？<a href="wechat.html">点这里看「在浏览器中打开」图文指引 →</a></p>
 
           <div class="sha-row" id="shaRow">
             <span>SHA-256</span>
-            <code id="dlSha">6b70d16252c85cd3 … 1d81804999</code>
+            <code id="dlSha">—</code>
             <button type="button" class="mini-btn" id="copySha" aria-label="复制校验值">复制</button>
           </div>
 
@@ -334,15 +357,16 @@ window.__suyuanGoWechat();
         <summary>维护者 · 如何更新下载文件 / 部署到 GitHub Pages</summary>
         <div class="maintainer-body">
           <ol>
-            <li>把安装包放进 <code>appAPK/</code> 目录，建议命名为 <code>溯源.apk</code>（放别的文件也行，页面会全部列出）。</li>
-            <li>在项目根目录执行 <code>node build.js</code>，自动刷新 <code>releases.json</code> 里的版本、大小、日期与校验值；版本号在 <code>build.js</code> 的 <code>SITE.version</code> 中修改，与 App 内 <code>config.js</code> 的 <code>LOCAL_VERSION</code> 保持一致。</li>
-            <li>提交并推送：<code>git add . &amp;&amp; git commit -m "release" &amp;&amp; git push</code>。注意 <code>.gitignore</code> 不能排除 <code>appAPK/</code>，否则线上没有文件可下。</li>
+            <li>把新版 APK 放进 <code>appAPK/</code>。<b>不需要改下载链接，也不需要手填大小 / 版本 / 日期</b>：这些全部自动计算。</li>
+            <li>命名二选一：① <b>直接覆盖 <code>溯源.apk</code></b>（零 Node、最省事，页面永远指向它）；② 命名成 <code>溯源-v1.0.3.apk</code>（版本号自动识别，但需要构建清单才能被静态页面发现）。目录里有多个 APK 时，<code>build.js</code> 按「版本号 → 文件修改时间」自动挑最新版设为主下载。</li>
+            <li><b>GitHub Pages 上不能运行、也不需要 Node.js。</b>它是纯静态托管，服务器只返回 HTML / CSS / JS / APK，不执行任何后端脚本。直接 <code>git add . &amp;&amp; git commit -m "release" &amp;&amp; git push</code> 就能上线，本地不用装 Node、不用跑构建命令。</li>
+            <li><code>node build.js</code> 只是<b>可选的「上传前工具」</b>（在你自己电脑或 GitHub Actions 里跑），产物是纯静态的 <code>releases.json</code> 与 <code>guide-preview.html</code>。它解决的是静态站点无法读取目录列表：想自动识别带版本号的新文件名、或显示 SHA-256，才需要它。已配置 <code>.github/workflows/refresh-releases.yml</code>，push 新包后由 GitHub 的免费构建机自动跑并把刷新后的静态文件提交回仓库 —— <b>那台构建机不是 Pages 服务器</b>，不想要它直接删掉这个工作流即可。</li>
             <li>GitHub 仓库 → Settings → Pages → Build and deployment 选 <b>Deploy from a branch</b>，分支 <b>main</b>、目录 <b>/ (root)</b>，保存后等一两分钟即可访问。</li>
           </ol>
-          <p>即使忘记跑 <code>build.js</code>，页面也会探测 <code>appAPK/溯源.apk</code>，并把目录里的其它文件作为备用下载。单文件超过 100 MB 时，GitHub 仓库会拒绝提交，建议改放 GitHub Releases。</p>
-          <p>微信引导已拆成独立页面 <code>wechat.html</code>（配套 <code>assets/wechat.css</code>、<code>assets/wechat.js</code>），一张带 ① ② 箭头指引的完整手机示意图一次呈现，改引导不用动本页。微信 / 企业微信打开 <code>index.html</code> 会首帧跳到 <code>wechat.html</code>；<b>引导页回跳只看 UA、完全不看 URL 参数</b>，所以从微信点「在浏览器中打开」到系统浏览器时，无论参数被丢掉还是改写，都会直接回到下载页，不会卡在引导页。<code>?nowx=1</code> 强制留在下载页。</p>
-          <p>想随时查看引导图，打开独立静态预览页 <a href="guide-preview.html"><code>guide-preview.html</code></a>：不含任何跳转逻辑、不依赖 URL 参数，本地双击、预览面板、线上都能直接看到完整引导图。它由 <code>node build.js</code> 从 <code>wechat.html</code> 同步生成，<b>改完引导记得重跑一次</b>。线上若微信没跳，可打开 <code>diag.html</code> 自查 UA 与版本。</p>
-          <p>想显示右上角「仓库」按钮，在 <code>build.js</code> 的 <code>SITE.github</code> 填入仓库地址后重新生成清单。</p>
+          <p><b>最省事的「零 Node 更新」</b>：每次把新版 APK 直接覆盖成 <code>appAPK/溯源.apk</code> 再 push。页面会在浏览器里对 APK 发一个 HEAD 请求，从响应头读 <code>Content-Length</code>（大小）与 <code>Last-Modified</code>（日期），下载链接、大小、日期全自动更新；<b>连 <code>releases.json</code> 删掉都能正常下载</b>。若探测到 APK 实际大小与清单对不上，页面会自动隐藏过期的 SHA-256 与旧版本号，不会给出错误校验值（本地跑一次 <code>node build.js</code> 即可恢复校验值）。<code>SITE.version</code> 只在文件名不含版本号时兜底。注意 <code>.gitignore</code> 不能排除 <code>appAPK/</code>；单文件超过 100 MB 时 GitHub 会拒绝提交，建议改放 GitHub Releases。</p>
+          <p>微信引导已拆成独立页面 <code>wechat.html</code>（配套 <code>assets/wechat.css</code>、<code>assets/wechat.js</code>），一张带 ① ② 箭头指引的完整手机示意图一次呈现，改引导不用动本页。微信 / 企业微信打开 <code>index.html</code> 会首帧跳到 <code>wechat.html</code>；<b>引导页回跳只看 UA、完全不看 URL 参数</b>，所以从微信点「在浏览器中打开」到系统浏览器时，无论参数被丢掉还是改写，都会直接回到下载页，不会卡在引导页。微信判定统一放在 <code>assets/wx-detect.js</code>；除首帧外，DOM 就绪、点击下载按钮、pageshow 与页面重新可见时都会复检，避免部分手机 WebView 缓存旧代码或脚本被拦时不出现引导页。<code>?nowx=1</code>（「仍要继续浏览」）只在内存里生效并立刻从地址栏抹掉，不会被复制分享出去导致别人永远不跳。</p>
+          <p>想随时查看引导图，打开独立静态预览页 <a href="guide-preview.html"><code>guide-preview.html</code></a>：不含任何跳转逻辑、不依赖 URL 参数，本地双击、预览面板、线上都能直接看到完整引导图。它由 <code>node build.js</code> 从 <code>wechat.html</code> 同步生成，改完引导重跑一次即可刷新这份预览快照（<b>不跑也不影响线上</b>：微信里看到的始终是 <code>wechat.html</code> 本体）。线上若微信没跳，可打开 <code>diag.html</code> 自查 UA 与版本。</p>
+          <p>想显示右上角「仓库」按钮，直接改 <code>releases.json</code> 里的 <code>github</code> 字段即可（纯文本、不用 Node）；用构建脚本时则填 <code>build.js</code> 的 <code>SITE.github</code>。</p>
         </div>
       </details>
     </div>
@@ -353,11 +377,11 @@ window.__suyuanGoWechat();
     <div class="wrap changelog-inner">
       <div class="section-head reveal">
         <span class="section-kicker">更新记录</span>
-        <h2>当前版本 v1.0.2</h2>
+        <h2>当前版本 v<span data-ver="">—</span></h2>
         <p>版本信息与 App 内 <code>config.js</code> 的 <code>LOCAL_VERSION</code> 保持一致。</p>
       </div>
       <div class="release reveal">
-        <div class="release-head"><span class="release-tag">v1.0.2</span><span class="release-date" id="releaseDate">2026-11</span></div>
+        <div class="release-head"><span class="release-tag">v<span data-ver="">—</span></span><span class="release-date" id="releaseDate">—</span></div>
         <ul>
           <li><b>新增脉象页</b>「脉象」页签与二十八脉动态图，本地 HTML 离线内嵌，无网络依赖。</li>
           <li><b>首帧同步上色</b>冷启动直接读取记住的主题，消除先显示默认底色再切换的整屏跳变。</li>
@@ -378,7 +402,7 @@ window.__suyuanGoWechat();
       </div>
       <div class="faq-list reveal">
         <details open><summary>需要联网吗？<i></i></summary><p>不需要。题库、解析、口诀与二十八脉动态页都内嵌在应用里，飞行模式也能练；只有「检查更新」会访问网络。</p></details>
-        <details><summary>在微信里点「下载」没反应？<i></i></summary><p>微信内置浏览器会拦截 APK 下载，页面会自动跳到独立的「请在浏览器中打开」引导页（一张带 ① ② 指引的完整手机示意图看完）。点屏幕右上角「···」，在底部面板第一行找到「在浏览器中打开」，系统浏览器会自动回到下载页再下载（这一步不依赖链接参数，不会停在引导页）；找不到该选项就点第二行「复制链接」，粘贴到浏览器地址栏访问；万一仍停在引导页，点底部「已在浏览器中 · 打开下载页」。若微信里压根没跳转，点下载按钮下方的「看图文指引」手动进入，或打开 <code>diag.html</code> 查看是版本缓存还是 UA 识别问题。</p></details>
+        <details><summary>在微信里点「下载」没反应？<i></i></summary><p>微信内置浏览器会拦截 APK 下载，页面会自动跳到独立的「请在浏览器中打开」引导页（一张带 ① ② 指引的完整手机示意图看完）。点屏幕右上角「···」，在底部面板第一行找到「在浏览器中打开」，系统浏览器会自动回到下载页再下载（这一步不依赖链接参数，不会停在引导页）；找不到该选项就点第二行「复制链接」，粘贴到浏览器地址栏访问；万一仍停在引导页，点底部「已在浏览器中 · 打开下载页」。若微信里压根没跳转，点下载按钮下方的「看图文指引」手动进入；新版本在点「下载」那一刻还会再判一次并自动带去引导页。仍不行就打开 <code>diag.html</code>，点「复制诊断信息」把结果发回，可判断是微信缓存旧代码还是 UA 没识别。</p></details>
         <details><summary>iPhone / iOS 能用吗？<i></i></summary><p>目前只提供 Android 安装包（APK），iPhone / iPad 暂不支持。</p></details>
         <details><summary>安装时被系统拦住怎么办？<i></i></summary><p>在系统提示中允许「安装未知来源应用」；部分机型还需临时关闭「纯净模式」或「安装监控」，装完可重新开启。</p></details>
         <details><summary>提示「应用未经验证」安全吗？<i></i></summary><p>当前是开发调试版（debug 签名），系统因此会给出提示。文件由本站直接提供，下载后可用上方 SHA-256 核对完整性；确认一致再安装，不要从第三方渠道获取同名安装包。</p></details>
@@ -407,6 +431,6 @@ window.__suyuanGoWechat();
 
 <!-- 微信引导已拆分为独立页面：wechat.html -->
 
-<script src="assets/app.js"></script>
+<script src="assets/app.js?v=20261115r6"></script>
 </body>
 </html>

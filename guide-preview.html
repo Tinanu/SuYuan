@@ -12,17 +12,19 @@
 <!-- 独立静态预览页：由 node build.js 从 wechat.html 生成；改引导请改源文件后重跑本脚本 -->
 <!-- 独立静态预览页：线上跳转脚本已移除，本页永不跳转、不依赖 URL 参数 -->
 
+<!-- 与主页 / 诊断页共用同一份微信判定规则 -->
+<script src="assets/wx-detect.js?v=20261115r6"></script>
 <link rel="stylesheet" href="assets/wechat.css">
 
 <meta name="robots" content="noindex, nofollow">
 <style>
-  .gp-bar { display: flex; align-items: center; flex-wrap: wrap; gap: 10px;
+  .gp-bar { display: grid; grid-template-columns: 1fr auto; align-items: center; gap: 6px 14px;
     width: min(100%, 540px); margin: 44px 0 18px; padding: 11px 14px;
     border: 1px solid #C6DBD6; border-radius: 12px; background: #E4F0ED;
     font-size: 12px; line-height: 1.65; color: #2A5A54; text-align: left; }
-  .gp-bar b { flex: none; font-size: 13px; color: #1E3330; }
-  .gp-bar span { flex: 1 1 240px; min-width: 0; }
-  .gp-bar a { flex: none; color: #1E6B5A; font-weight: 600; text-decoration: underline; text-underline-offset: 3px; }
+  .gp-bar b { grid-column: 1; grid-row: 1; font-size: 13px; color: #1E3330; }
+  .gp-bar a { grid-column: 2; grid-row: 1; white-space: nowrap; color: #1E6B5A; font-weight: 600; text-decoration: underline; text-underline-offset: 3px; }
+  .gp-bar span { grid-column: 1 / -1; grid-row: 2; min-width: 0; }
   .gp-bar code { font-size: 11px; }
   .wx-preview-bar { display: none !important; } /* 由上面的横幅代替 */
 </style>
