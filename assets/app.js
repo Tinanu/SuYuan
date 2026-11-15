@@ -142,7 +142,8 @@
       $('#dlLabel').textContent = '正在检测安装包';
       $('#dlTitle').textContent = '自动读取 appAPK/ 目录…';
       $('#dlHint').textContent = '把 APK 放进 appAPK/ 即可，版本与大小会自动计算';
-      $('#dlMainBtn').removeAttribute('href');
+      // 保留 HTML 里静态写好的 href / download 作为兜底，
+      // 别让下载按钮在异步探测期间变成「点了没反应」。
       return;
     }
 
@@ -198,7 +199,7 @@
       try { ctrl = new AbortController(); } catch (e) {}
       var opts = { method: 'HEAD', cache: 'no-store' };
       if (ctrl) opts.signal = ctrl.signal;
-      var timer = setTimeout(function () { if (ctrl) ctrl.abort(); resolve(null); }, 4000);
+      var timer = setTimeout(function () { if (ctrl) ctrl.abort(); resolve(null); }, 2500);
       fetch(url, opts).then(function (r) {
         clearTimeout(timer);
         if (!r.ok) return resolve(null);
@@ -213,11 +214,13 @@
   function apkRecord(f, hit, base) {
     var file = f.file || f.name || base.primaryName || '溯源.apk';
     var fromName = versionFromFile(file);
-    // releases.json 是 build.js 留下的静态快照。若线上 APK 的实际大小与清单不一致，
-    // 说明换过包但没刷新清单（也就是「完全不跑 node、直接 push」的部署方式）：
-    // 此时清单里的 SHA-256 与版本号已经过期，必须丢掉，否则用户拿旧哈希校验新包会失败。
+    // ★ 版本号恒定来自 releases.json 顶层 version（唯一入口），
+    //   与「文件大小是否和清单一致」无关；文件名自带版本号时优先尊重文件名。
+    //   曾经在这里把过期清单的版本号一起清空，导致主页忽而显示 v1.0.3、忽而「最新版」。
+    var version = fromName || f.version || base.version || '';
+    // HEAD 大小与清单不一致 = 换过包但没刷新清单 / CDN 返回的 Content-Length 不同。
+    // 这时【只有 SHA-256 会过期】；版本号与下载文件名必须保持稳定，不能跟着忽有忽无。
     var stale = !!(hit && hit.size && f.size && Number(hit.size) !== Number(f.size));
-    var version = fromName || (stale ? '' : (f.version || ''));
     var when = (hit && hit.lastModified) || f.mtime || f.updated || '';
     return {
       file: file,
@@ -232,10 +235,32 @@
       updated: dateText(when),
       mtime: when,
       url: f.url,
-      download: (f.download && !stale)
-        ? f.download
-        : ((base.app || '溯源') + (version ? '-v' + version : '') + '.apk')
+      // 始终按版本号派生，不读清单里可能残留的旧 download 字段
+      download: (base.app || '溯源') + (version ? '-v' + version : '') + '.apk'
     };
+  }
+
+  // 排序：版本号 → 修改时间 → 清单标记的 latest
+  function sortByNewest(list, latestUrl) {
+    return list.slice().sort(function (a, b) {
+      var c = cmpVersion(b.version, a.version);
+      if (c) return c;
+      var d = (Date.parse(b.mtime || '') || 0) - (Date.parse(a.mtime || '') || 0);
+      if (d) return d;
+      if (a.url === latestUrl) return -1;
+      if (b.url === latestUrl) return 1;
+      return 0;
+    });
+  }
+
+  function renderWith(base, main) {
+    render(Object.assign({}, base, {
+      version: (main && main.version) || base.version || '',
+      latest: main || null,
+      files: main
+        ? [main].concat((base.files || []).filter(function (f) { return f.url !== main.url; }))
+        : (base.files || [])
+    }));
   }
 
   async function initRelease() {
@@ -276,38 +301,28 @@
     list.forEach(function (f) { if (f.url && !seen[f.url]) { seen[f.url] = 1; candidates.push(f); } });
     if (!seen[primaryUrl]) candidates.push({ file: base.primaryName || '溯源.apk', url: primaryUrl });
 
-    // 并行 HEAD：确认哪些文件真实存在，并读取真实大小 / 修改时间
+    var latestUrl = base.latestUrl || (base.latest && base.latest.url) || '';
+
+    // ① 清单到手立刻渲染：版本号 / 下载文件名 / href / 大小 / SHA 首屏全部就位，
+    //    不等 HEAD 探测。以前必须等所有 HEAD 回来才 render，弱网或 CDN 慢时
+    //    页面会长时间停在「读取中」，下载名也忽而是 溯源.apk、忽而是 溯源-v1.0.3.apk。
+    var fromManifest = sortByNewest(
+      candidates.map(function (f) { return apkRecord(f, null, base); }), latestUrl);
+    var quickMain = fromManifest[0] ||
+      (candidates.length ? apkRecord(candidates[0], null, base) : null);
+    if (quickMain) renderWith(base, quickMain);
+
+    // ② HEAD 只做后台校准：更新真实大小 / 日期、隐藏过期的校验值。
+    //    版本号与下载文件名在第一阶段已经定好，这里不会再改变它们。
     var found = [];
     try {
       var probed = await Promise.all(candidates.map(function (f) {
         return probe(f.url).then(function (hit) { return hit ? apkRecord(f, hit, base) : null; });
       }));
-      found = probed.filter(Boolean);
+      found = sortByNewest(probed.filter(Boolean), latestUrl);
     } catch (e) { found = []; }
-
-    // 自动挑最新：版本号 → 修改时间 → 清单标记的 latest
-    var latestUrl = base.latestUrl || (base.latest && base.latest.url) || '';
-    found.sort(function (a, b) {
-      var c = cmpVersion(b.version, a.version);
-      if (c) return c;
-      var d = (Date.parse(b.mtime || '') || 0) - (Date.parse(a.mtime || '') || 0);
-      if (d) return d;
-      if (a.url === latestUrl) return -1;
-      if (b.url === latestUrl) return 1;
-      return 0;
-    });
-    var main = found[0];
-    // 探测全失败（如直接双击 file://）时，仍用清单信息给出可点击的下载链接
-    if (!main && candidates.length) main = apkRecord(candidates[0], null, base);
-
-    render(Object.assign({}, base, {
-      // 清单过期时连站点级版本号也一起作废，避免显示旧版本 / 旧哈希误导用户
-      version: (main && main.stale) ? '' : ((main && main.version) || base.version || ''),
-      latest: main || null,
-      files: main
-        ? [main].concat((base.files || []).filter(function (f) { return f.url !== main.url; }))
-        : (base.files || [])
-    }));
+    var main = found[0] || quickMain;
+    if (main) renderWith(base, main);
   }
 
   /* ---------------- 十二时辰流注环 ---------------- */
