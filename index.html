@@ -69,7 +69,7 @@
   window.__suyuanGoWechat();
 })();
 </script>
-<link rel="stylesheet" href="assets/style.css?v=20261128r7">
+<link rel="stylesheet" href="assets/style.css?v=20261128r8">
 </head>
 <body>
 <script>try { if (window.__suyuanGoWechat) window.__suyuanGoWechat(); } catch (e) {}</script>
@@ -134,11 +134,12 @@
             <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v12m0 0 4-4m-4 4-4-4M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2"/></svg>
             <span id="heroBtnText">下载溯源</span>
           </a>
-          <a class="btn btn-outline btn-lg" href="#features">了解功能</a>
-          <a class="btn btn-ghost btn-lg js-web-link" id="webBtnHero" href="#" target="_blank" rel="noopener noreferrer" title="打开 Web 版">
+          <!-- 顺序：下载 → Web 版 → 了解功能。Web 版排第二，手机首屏第一行就能看到 -->
+          <a class="btn btn-web btn-lg js-web-link" id="webBtnHero" href="#" target="_blank" rel="noopener noreferrer" title="打开 Web 版">
             <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c2.6 2.6 3.9 5.6 3.9 9s-1.3 6.4-3.9 9c-2.6-2.6-3.9-5.6-3.9-9S9.4 5.6 12 3Z"/></svg>
             <span>打开 Web 版</span>
           </a>
+          <a class="btn btn-ghost btn-lg hero-more" href="#features">了解功能</a>
         </div>
         <p class="hero-meta" id="heroMeta">版本与大小自动读取 · Android 7.0+ · 无网络依赖</p>
       </div>
@@ -442,6 +443,6 @@
 
 <!-- 微信引导已拆分为独立页面：wechat.html -->
 
-<script src="assets/app.js?v=20261128r7"></script>
+<script src="assets/app.js?v=20261128r8"></script>
 </body>
 </html>

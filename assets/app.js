@@ -171,9 +171,8 @@
         el.removeAttribute('data-web-url');
         el.title = 'Web 版未添加部署';
       }
+      el.classList.toggle('missing', !webUrl);   // 首屏按钮与下载卡片共用同一状态
     });
-    var webCard = $('#webBtnDl');
-    if (webCard) webCard.classList.toggle('missing', !webUrl);
     var webStatus = $('#webStatus');
     if (webStatus) {
       var host = '';

@@ -99,6 +99,19 @@ svg { width: 1em; height: 1em; fill: none; stroke: currentColor; stroke-width: 1
 .btn-outline:hover { border-color: var(--gold); }
 .btn-ghost { background: var(--soft); color: var(--ink); }
 .btn-ghost:hover { background: var(--soft-green); }
+/* 首屏 Web 版：仅次于主下载的「第二主行动」，用主题色描边 + 淡绿底，明显强于了解功能 */
+.btn-web {
+  border-color: var(--accent); background: var(--soft-green); color: var(--accent-deep);
+  font-weight: 700;
+  box-shadow: 0 6px 18px color-mix(in srgb, var(--accent) 16%, transparent);
+}
+.btn-web svg { color: var(--accent); }
+.btn-web:hover {
+  background: var(--accent); border-color: var(--accent); color: var(--on-accent);
+  box-shadow: 0 12px 26px color-mix(in srgb, var(--accent) 30%, transparent);
+}
+.btn-web:hover svg { color: var(--on-accent); }
+.btn-web.missing { opacity: .9; }   /* 未配置时略收，但依然是首屏第二醒目的入口 */
 .btn-lg { padding: 15px 30px; font-size: 15px; border-radius: 999px; }
 .btn-block { display: flex; width: 100%; }
 .btn[hidden] { display: none; }
@@ -434,6 +447,19 @@ svg { width: 1em; height: 1em; fill: none; stroke: currentColor; stroke-width: 1
   .hero h1 { font-size: 78px; }
   .hero-sub { font-size: 17px; }
   .hero-quote { font-size: 13px; }
+  /* 手机首屏固定两列：下载 + Web 版同处第一行，一眼就能看见 Web 版；
+     字号随视口收缩，保证 320px 小屏也不会挤出列外 */
+  .hero-cta { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+  .hero-cta .btn-lg {
+    width: 100%; padding: 12px 6px; gap: 6px; letter-spacing: 0;
+    font-size: clamp(11px, 3.4vw, 14px);
+  }
+  .hero-cta .btn-lg svg { width: 16px; height: 16px; flex: none; }
+  .hero-cta .btn-lg > span { min-width: 0; overflow: hidden; text-overflow: ellipsis; }
+  .hero-cta .hero-more {
+    grid-column: 1 / -1; justify-self: center; width: auto;
+    padding: 8px 24px; font-size: 13px;
+  }
   .hero-visual { min-height: 530px; }
   .phone { transform: scale(.86) rotate(-2deg); }
   .phone:hover { transform: scale(.86) rotate(0); }
