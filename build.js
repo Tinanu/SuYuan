@@ -18,6 +18,11 @@
  *   页面运行时也只认这一处，自动派生所有版本显示与「溯源-v版本号.apk」下载文件名。
  *   换版本时只改那一行即可（不跑本脚本、直接手改 releases.json 也生效）。
  *
+ * ★ Web 版入口【唯一配置】：releases.json 顶层的 "webUrl"。
+ *   填上网址 → 首页 / 下载卡片出现「Web 版」按钮，点击在新标签打开；
+ *   留空 ""   → 按钮照常显示，点击提示「Web 版未添加部署」，不会乱跳。
+ *   本脚本会读回并原样写回这个字段，手改清单后重跑构建 / Actions 都不会把它清空。
+ *
  * ★ 重要：GitHub Pages 是纯静态托管，服务器上【不会也不必】运行本脚本 / Node.js。
  *   本脚本只在「上传之前」执行 —— 你自己的电脑，或 GitHub Actions 的构建机；
  *   生成的 releases.json 与 guide-preview.html 都是静态文件，push 上去即可。
@@ -38,15 +43,16 @@ const OUT = path.join(ROOT, 'releases.json');
 const GUIDE_SRC = path.join(ROOT, 'wechat.html');
 const GUIDE_PREVIEW = path.join(ROOT, 'guide-preview.html');
 
-// 站点级配置。★ version 不在这里写：唯一来源是 releases.json 顶层的 "version"。
-// main() 启动时会把清单里的版本读进来；清单不存在时才留空（页面显示「最新版」）。
-// 只要 APK 命名成 溯源-v1.0.3.apk，文件名里的版本号会自动识别并写回清单。
+// 站点级配置。★ version / webUrl / github 不在这里写死：
+// 唯一来源是 releases.json 顶层同名字段，main() 启动时会先读回再生成，
+// 所以手改清单后重跑本脚本、或 Actions 自动构建，都不会把用户改的值打回默认。
 const SITE = {
   app: '溯源',
   version: '',
   subtitle: '子午流注 · 素问极简版',
   qq: '1241611627',
-  github: '', // 例如 https://github.com/yourname/suyuan ，填了页面才会显示仓库按钮
+  github: '',   // 例如 https://github.com/yourname/suyuan ，填了页面才显示「仓库」按钮
+  webUrl: '',   // Web 版地址，例如 https://xxx.github.io/suyuan-web/ ；留空则点击提示「Web 版未添加部署」
 };
 
 // 不同扩展名在页面上的呈现方式，priority 越小越靠前
@@ -94,17 +100,16 @@ function sha256(file) {
   });
 }
 
-// ★ 版本号唯一来源：读取现有 releases.json 顶层的 version。
-// 这样用户手改清单后，Actions 重跑本脚本也不会把版本打回旧值。
-function readPreviousVersion() {
+// ★ 读回站点级配置：version / webUrl / github 都以 releases.json 顶层为唯一来源。
+// 用户手改清单后，Actions 重跑本脚本也不会把版本号或 Web 版地址打回默认值。
+function readPreviousSite() {
   try {
     const prev = JSON.parse(fs.readFileSync(OUT, 'utf8'));
-    if (prev && typeof prev.version === 'string' && prev.version.trim()) {
-      SITE.version = prev.version.trim();
-      return;
-    }
-  } catch (e) { /* 清单不存在 / 格式异常：保持空，页面显示「最新版」 */ }
-  console.log('[build] 提示：releases.json 里没有 version，可在顶层 "version" 填一个版本号。');
+    if (!prev || typeof prev !== 'object') return;
+    if (typeof prev.version === 'string' && prev.version.trim()) SITE.version = prev.version.trim();
+    if (typeof prev.webUrl === 'string') SITE.webUrl = prev.webUrl.trim();
+    if (typeof prev.github === 'string') SITE.github = prev.github.trim();
+  } catch (e) { /* 清单不存在 / 格式异常：保持默认 */ }
 }
 
 // 可选：若 appAPK/ 里同时放了 子午流注.js，读取其中的副标题与 QQ。
@@ -175,7 +180,7 @@ function syncGuidePreview() {
 }
 
 async function main() {
-  readPreviousVersion();      // ★ 先读回唯一版本号，再生成，避免把用户改的版本打回旧值
+  readPreviousSite();         // ★ 先读回 version / webUrl / github，避免把用户手改的值打回默认
   readScriptMeta();
   syncGuidePreview();
 
@@ -259,6 +264,7 @@ async function main() {
   fs.writeFileSync(OUT, JSON.stringify(data, null, 2) + '\n', 'utf8');
   console.log(`[build] 版本 ${data.version || '（未设置）'} · ${files.length} 个文件 → releases.json`);
   console.log(`  · 版本号唯一入口：releases.json 顶层 "version" = ${data.version || '（未设置，页面显示「最新版」）'}`);
+  console.log(`  · Web 版地址 "webUrl" = ${data.webUrl || '（未填写：点击提示「Web 版未添加部署」）'}`);
   if (latest) {
     console.log(`  ★ 主下载（自动选中最新版）：${latest.file}  ${data.version ? 'v' + data.version : '最新版'}  ` +
       `${(latest.size / 1024 / 1024).toFixed(2)} MB  ${latest.updated}`);

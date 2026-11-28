@@ -1,10 +1,11 @@
 {
   "app": "溯源",
-  "version": "1.1.79",
+  "version": "2.4.39",
   "subtitle": "子午流注 · 素问极简版",
   "qq": "1241611627",
   "github": "",
-  "generated": "2026-11-15T09:55:21.845Z",
+  "webUrl": "http://119.91.232.183:5173/",
+  "generated": "2026-11-28T03:11:27.184Z",
   "primaryName": "溯源.apk",
   "primaryUrl": "appAPK/%E6%BA%AF%E6%BA%90.apk",
   "latest": {

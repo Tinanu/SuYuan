@@ -15,6 +15,7 @@
     subtitle: '子午流注 · 素问极简版',
     qq: '1241611627',
     github: '',
+    webUrl: '',                       // 唯一来源：releases.json 顶层 webUrl
     primaryName: '溯源.apk',
     primaryUrl: 'appAPK/%E6%BA%AF%E6%BA%90.apk',
     files: []
@@ -63,13 +64,33 @@
   }
   var shortHash = function (h) { return h && h.length > 34 ? h.slice(0, 16) + ' … ' + h.slice(-10) : (h || '—'); };
 
+  /* ---------------- Web 版入口 ----------------
+     地址只认 releases.json 顶层 "webUrl" 一处：
+       · 没写协议自动补 https://；只允许 http(s)，避免 javascript: 之类被误填进清单；
+       · 有地址 → <a target="_blank"> 原生打开，最稳，不会被弹窗拦截；
+       · 没填   → 按钮照常显示，点击只弹「Web 版未添加部署」，不跳转也不滚回页首。 */
+  function normalizeWebUrl(raw) {
+    var s = String(raw == null ? '' : raw).trim();
+    if (!s) return '';
+    if (!/^[a-z][a-z0-9+.-]*:/i.test(s)) s = 'https://' + s;
+    if (!/^https?:\/\//i.test(s)) return '';
+    try { return new URL(s, location.href).href; } catch (e) { return ''; }
+  }
+  $$('.js-web-link').forEach(function (el) {
+    el.addEventListener('click', function (e) {
+      if (el.getAttribute('data-web-url')) return;   // 有地址：交给原生 <a target="_blank">
+      e.preventDefault();
+      toast('Web 版未添加部署', 3200);
+    });
+  });
+
   /* ---------------- Toast ---------------- */
   var toastEl = $('#toast'), toastTimer;
-  function toast(msg) {
+  function toast(msg, ms) {
     toastEl.textContent = msg;
     toastEl.classList.add('show');
     clearTimeout(toastTimer);
-    toastTimer = setTimeout(function () { toastEl.classList.remove('show'); }, 2400);
+    toastTimer = setTimeout(function () { toastEl.classList.remove('show'); }, ms || 2400);
   }
   function copyText(text, msg) {
     if (!text) return;
@@ -137,6 +158,28 @@
     var gh = $('#githubLink');
     if (state.github) { gh.href = state.github; gh.hidden = false; }
     else { gh.hidden = true; }
+
+    // Web 版：把清单里唯一的 webUrl 广播到首屏按钮 + 下载卡片入口
+    var webUrl = normalizeWebUrl(state.webUrl);
+    $$('.js-web-link').forEach(function (el) {
+      if (webUrl) {
+        el.setAttribute('href', webUrl);
+        el.setAttribute('data-web-url', webUrl);
+        el.title = '在新标签打开 Web 版';
+      } else {
+        el.setAttribute('href', '#');
+        el.removeAttribute('data-web-url');
+        el.title = 'Web 版未添加部署';
+      }
+    });
+    var webCard = $('#webBtnDl');
+    if (webCard) webCard.classList.toggle('missing', !webUrl);
+    var webStatus = $('#webStatus');
+    if (webStatus) {
+      var host = '';
+      try { host = webUrl ? new URL(webUrl).host : ''; } catch (e) {}
+      webStatus.textContent = host ? (host + ' · 点击在新标签打开') : '免安装 · 浏览器直接使用';
+    }
 
     if (!main) {
       $('#dlLabel').textContent = '正在检测安装包';
